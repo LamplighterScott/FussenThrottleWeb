@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="FussenCSS.css">
+</head>
+<body style="background-color:#30081A">
+
+<div class="dropdown">
+  <button id="locoHeader" onClick="showLocos()" class="dropbtn">Select Loco</button>
+  <div id="myDropdown" class="dropdown-content">
+    <a id="0" onClick="selectLoco('0')">🚂	SBB 111</a>
+    <a id="1" onClick="selectLoco('1')">🚃	DB 112</a>
+    <a id="2" onClick="selectLoco('2')">🚋	SBB CFF FFS</a>
+    <a id="3" onClick="selectLoco('3')">🚊	DB 239</a>
+  </div>
+</div>
+
+<span>
+ <ul class="listColumn" style="background-color:#FDF2F7;width: 70%;">
+    <li id="T1" onClick="setZ('T1')">⬆️ To Outer</li>
+    <li id="T2" onClick="setZ('T2')">⬆️ To Inner</li>
+    <li id="T3" onClick="setZ('T3')">⬆️ Yard 1</li>
+    <li id="T4" onClick="setZ('T4')">⬆️ Yard 1-1</li>
+    <li id="T5" onClick="setZ('T5')">⬆️ Outer to Cross</li>
+    <li id="T6" onClick="setZ('T6')">⬆️ Cross to Yard 2</li>
+    <li id="T7" onClick="setZ('T7')">⬆️ Yard 2-2</li>
+    <li id="T8" onClick="setZ('T8')">⬆️ Sidetrack 2-2</li>
+    <li id="C17" onClick="setZ('C17')">🧲 Decoupler 1A</li>
+    <li id="C18" onClick="setZ('C18')">🧲 Decoupler 1B</li>
+    <li id="C19" onClick="setZ('C19')">🧲 Decoupler 2A</li>
+    <li id="C20" onClick="setZ('C20')">🧲 Decoupler 2B</li>
+    <li id="T25" onClick="setZ('T25')">🚦 Semaphore</li>
+    <li id="L30" onClick="setZ('L30')">🏰 Castle</li>
+  </ul>
+  <ul class="listColumn" style="background-color:#F4BED5;text-align:center;width: 15%;padding-right: 8px;">
+      <li id="F0" onClick="setF('0')">💡</li>
+      <li id="F1" onClick="setF('1')">🔆</li>
+      <li id="F2" onClick="setF('2')">1️⃣</li>
+      <li id="F3" onClick="setF('3')">2️⃣</li>
+      <li id="F4" onClick="setF('4')">↔️</li>
+      <li id="J0" onClick="setZ('J0')">🔇</li>
+      <li id="J1" onClick="setZ('J1')">🔉</li>
+      <li id="J2" onClick="setZ('J2')">🔊</li>
+      <li id="L1" onClick="setZ('L1')">🏰</li>
+  </ul>
+  <ul class="listColumn" style="background-color:#EC8EB6;text-align:center;width: 15%;padding-right: 8px;">
+      <li id="J3" onClick="setZ('J3')">📯</li>
+      <li id="J4" onClick="setZ('J4')">🛤️</li>
+      <li id="J5" onClick="setZ('J5')">🚂</li>
+      <li id="J6" onClick="setZ('J6')">🌬️</li>
+      <li id="J7" onClick="setZ('J7')">🎺</li>
+      <li id="J8" onClick="setZ('J8')">🎺</li>
+      <li id="J9" onClick="setZ('J9')">🎺</li>
+      <li id="J12" onClick="setZ('J12')">🔔</li>
+      <li id="J13" onClick="setZ('J13')">🚢</li>
+      <li id="J14" onClick="setZ('J14')">🚢</li>
+      <li id="J22" onClick="setZ('J22')">⛪</li>
+      <li id="J23" onClick="setZ('J23')">🕰️</li>
+      <li id="J24" onClick="setZ('J24')">🎷</li>
+      <li id="J25" onClick="setZ('J25')">🚒</li>
+      <li id="J26" onClick="setZ('J26')">⛴️</li>
+      <li id="J27" onClick="setZ('J27')">🛎️</li>
+      <li id="J102" onClick="setZ('J102')">🚃</li>
+      <li id="J103" onClick="setZ('J103')">🏭</li>
+      <li id="J104" onClick="setZ('J104')">🌆</li>
+      <li id="J105" onClick="setZ('J105')">🚂</li>
+      <li id="J106" onClick="setZ('J106')">🐕</li>
+      <li id="J107" onClick="setZ('J107')">🥳</li>
+      <li id="J108" onClick="setZ('J108')">🇮🇳</li>
+  </ul>
+</span>
+
+<div class="btn-group">
+	<button id="powerButton" onClick="sendPower()">⭕</button>
+  	<button id="reverseButton" onClick="setDir(0)">⏪</button>
+  	<button id="stopButton" onClick="stopSpeed()">🛑</button>
+	<button id="forwardButton" onClick="setDir(1)">⏩</button>
+	<button id="settingsButton">⚙️</button>
+</div>
+
+<div class="slidecontainer">
+  <input type="range" min="-126" max="126" value="0" class="slider" id="speedSlider" oninput="setSpeed(1)">
+</div>
+<h2 id="output" style="color:white">Message</h2>
+</body>
+
+<script language="javascript" type="text/javascript" src="FussenJS.js"></script>
+
+</html>
