@@ -11,65 +11,14 @@
 #include <DNSServer.h>
 #include <WebSocketsServer.h>
 
+// #include <ArduinoOTA.h> // OTA update
+
 #include "Config.h"
 
 DNSServer dnsServer;
 ESP8266WebServer server(80); //Server on port 80
 WebSocketsServer webSocket(81);
 
-/*
-typedef struct {
-  int id;  // system id number w/o system and type chars
-  const char *title;  // any string for name of output
-  const char *icon;  // icon
-} fData;
-// Format {id, title, icon}
-fData ftt[]= {
-  {0, "Light", "💡"},
-  {1, "Beam", "🌞"},
-  {2, "Cab 1", "1️⃣"},
-  {3, "Cab 2", "2️⃣"},
-  {4, "Shunt", "↔️"}
-};
-const int totalFuntions = 5;  // Must include the zero row at the end
-*/
-
-/*
-typedef struct {
-  int id;  // system id number w/o system and type chars
-  const char *title;  // any string for name of output
-  const char *icon;  // icon
-} jData;
-// Format {id, title, icon}
-jData jtt[]= {
-  {0, "Vol Up", "🔊"},
-  {1, "Vol Dn", "🔉"},
-  {2, "Horn", "🎺"},
-  {3, "Approach", "💡"},
-  {4, "Steam", "🚂"},
-  {5, "Whistle", "🌬️"},
-  {6, "Horn2", "📯"},
-  {7, "Clear", "🚨"},
-  {8, "Distant", "🛤️"},
-  {8, "Crossing", "🛎️"},
-  {9, "Air 1", "🚢"},
-  {10, "Air 2", "⛴️"},
-  {11, "Church", "⛪"},
-  {12, "Clock", "🕰️"},
-  {13, "Dixie", "💃"},
-  {14, "Fire", "🚒"},
-  {15, "Foghorn", "🌁"},
-  {16, "Bell", "🔔"},
-  {17, "Freight", "🚞"},
-  {18, "HVAC", "🎐"},
-  {19, "Street", "🚗"},
-  {20, "Dog", "🐕"},
-  {22, "Steam", "🚂"},
-  {23, "Party", "🎉"},
-  {24, "Idle", "⚙️"}
-};
-const int totalSounds = 24;  // Must include the zero row at the end
-*/
 
 typedef struct {
   int id;  // system id number w/o system and type chars
@@ -114,7 +63,7 @@ String sendText = "";
 //==============================================================
 void setup(void){
   // delay(1500); // From WiThrottle
-  Serial.begin(114200);
+  Serial.begin(115200);
   delay(10);
   Serial.println('\n');
   // Serial.flush(); // From WiThrottle
@@ -125,6 +74,7 @@ void setup(void){
   startWebSocket();
   startMDNS();
   startServer();
+  // startOTA();
 
   loadOutputs();  // register outputs with Arduino
 
@@ -134,6 +84,7 @@ void setup(void){
 //                     LOOP
 //==============================================================
 void loop(void){
+  ArduinoOTA.handle():  // OTA Update
   dnsServer.processNextRequest();
   webSocket.loop();
   server.handleClient();          //Handle client requests
@@ -143,6 +94,46 @@ void loop(void){
 //==============================================================
 //                     Setup Functions
 //==============================================================
+
+/*void startOTA(){
+  Serial.println("Connecting ...");
+  Serial.println("\nBooting");
+  while (WiFi.waitforConnectResult() != WL_CONNECTED) {
+    Serial.println("Connection Failed! Rebooting...");
+    delay(5000);
+    ESP.restart();
+  }
+
+  // Port defaults to ESP8266
+  // ArduinoOTA.setPort(8266);
+
+  // HostName defaults to esp8266-[ChipID]
+  // ArduinoOTA.setHostname("FussenRR);
+
+  // No authentication by defaults
+  // ArdinoOTA.setPassword(password);  // Current disabled in Config.h
+
+  ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+  Serial.println("OTA ready");
+
+}*/
 
 void startWiFi() {
   WiFi.mode(WIFI_AP);
@@ -201,23 +192,6 @@ void startServer() {
   Serial.println("HTTP server started");
 
 }
-
-//===============================================================
-//   WEBPAGE BUILDER
-//===============================================================
-
-//void buildTO () {
-//  for (tData &t: ttt) {
-
-//    int state = t.zStatus;
-//    String stateTxt = (state>0) ? "1" : "0";
-//    String icon = (state>0) ? t.icon1 : t.icon0;
-//    String itText = String(t.id);
-//    char lineChar = "B" + stateTxt + "<li id=\"" + itText + "\" onClick=\"setZ('" + itText + "')\"> + t.icon + " " + t.title + "</li>";
-//    webSocket.sendTXT(num, lineChar);
-//   }
-
-//}
 
 //===============================================================
 //   Server Handlers
