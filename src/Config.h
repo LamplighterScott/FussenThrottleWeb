@@ -9,7 +9,7 @@
 
 /* Access Point name and password. */
 const char* ssid = "FussenRR";
-// const char* password = "12345";
+// const char* password = "123456";
 
 /* Network parameters */
 const char* mdnsName = "Fussen";

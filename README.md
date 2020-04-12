@@ -1,4 +1,4 @@
-# FussenThrottleWeb
+# FussenThrottleSafari
 
 ESP-01 based WiFi server for DCC++.
 
