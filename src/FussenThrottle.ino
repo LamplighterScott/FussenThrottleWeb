@@ -63,7 +63,7 @@ String sendText = "";
 //                  SETUP
 //==============================================================
 void setup(void){
-  // delay(1500); // From WiThrottle
+  delay(1500); // From WiThrottle
   Serial.begin(115200);
   delay(10);
   Serial.println('\n');
@@ -77,6 +77,8 @@ void setup(void){
   startServer();
 
   loadOutputs();  // register outputs with Arduino
+  // delay(1000);
+  // Serial.println("<J 3>"); // play first sound after loadling switches
 
 }
 
@@ -229,6 +231,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           // Sound instructions from control device: 0=stopLoop, 1=soundDN, 2=soundUP, sounds: 3 to x
           // Instructions in DFPlayer: -1=soundDN, 0=soundUP, sounds: 1 to x, Action 0=stop sound, execute by DF Player library function
           Serial.println("<J " +  String(soundNo) + ">"); //  DCC++ returns nothing
+          // Serial.println("<H J " + String(soundNo) + ">");
         }
 
       }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
