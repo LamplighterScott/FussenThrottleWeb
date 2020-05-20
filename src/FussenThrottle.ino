@@ -20,6 +20,14 @@ DNSServer dnsServer;
 ESP8266WebServer server(80); //Server on port 80
 WebSocketsServer webSocket(81);
 
+struct cabData {
+  char *icon[1];
+  char *number[3];
+  char *title[10];
+};
+struct cabData cabs[10];
+
+
 
 typedef struct {
   int id;  // system id number w/o system and type chars
@@ -196,6 +204,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
     case WStype_TEXT: {                     // if new text data is received - command from control device processor
       // Serial.printf("[%u] get Text: %s\n", num, payload);
       char *pch;
+      pch = strtok((char *)payload,"<>");
 
       //const char payloadCommand = (const char) payload[1];
       const char *payloadChar = (const char *) payload;
@@ -209,6 +218,67 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         Serial.println("<1>");
         sendTurnoutStatusToDevice(0, num);
         webSocket.sendTXT(num, payloadChar);
+
+      } else if (payloadCommand == 'C') {
+        rosterChange(pch+1); // moves past first charact in pch
+
+      }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
+        int fKey;
+        pch = strtok((char *)payload,"<>F");
+        if (sscanf(pch,"%i %i", &locoNumber, &fKey)==2) {
+          LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
+          int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
+          if (locoNumber < maxNumberOfLocos) {
+            String locoAddress = locoAddresses[locoNumber];
+            Serial.println("<f " + String(locoAddress) + " " + String(keyFunc) + ">");  // DCC++ returns?
+          }
+        }
+
+      } else if (payloadCommand == 'I') {
+        pch = strtok((char *)payload,"<>I ");
+        if (*pch == 'C') {
+          // build and send cabs html
+        } else {
+          // build and send turnouts html
+        }
+
+
+      } else if (payloadCommand == 's') {   // used for getting loco status when changing locos
+          // Send speed and direction for all throttles
+          // int locoAddress;
+          pch = strtok((char *)payload,"<>s");
+          // int testNo = sscanf(pch,"%i", &locoAddress);
+          // Serial.println("Scan No: " + String(testNo) + "  LocoAddress: " + String(locoAddress));
+          if (sscanf(pch,"%i", &locoNumber)==1) {
+            /*for (int x=0; x<maxNumberOfLocos; x++) {
+               if (locoIDs[x] == locoAddress) {
+                locoNumber=x;
+                break;
+               }
+            }
+            int testNoo = sscanf(pch,"%i", &locoAddress);*/
+            Serial.println("LocoNumber: " + String(locoNumber));
+            sendText = "<t "+String(locoNumber)+" "+String(LocoState[locoNumber][5])+" "+String(LocoState[locoNumber][6])+">";  // Speed and direction to control device;
+            webSocket.sendTXT(num, sendText);
+          }
+
+      } else if (payloadCommand == 't') {             // Direction: reverse(0), forward(1); Speed: eStop(<0), 0-126
+        String payloadStr = payloadChar;
+        // Serial.println(payloadStr);  // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
+        //int locoAddress;
+        int locoSpeed;
+        int locoDirection;
+        pch = strtok((char *)payload,"<>t");
+        if (sscanf(pch,"%i %i %i", &locoNumber, &locoSpeed, &locoDirection)==3) {
+            // Save new settings
+          LocoState[locoNumber][5]=locoSpeed;
+          LocoState[locoNumber][6]=locoDirection;
+          int locoID = locoNumber + 1;  // DCC++ loco register starts at 1
+          webSocket.sendTXT(num, payloadStr);  // confirm new settings to throttle
+          if (locoNumber < maxNumberOfLocos) {
+            Serial.println("<t " + String(locoID)+ " " + locoAddresses[locoNumber] + " " + String(locoSpeed)+ " " + String(locoDirection) + ">");
+          }
+        }
 
       } else if (payloadCommand == 'Z') {             // Turnouts, decouplers and sounds <Z Type&ID>
         pch = strtok((char *)payload,"<>Z ");
@@ -233,55 +303,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           Serial.println("<J " +  String(soundNo) + ">"); //  DCC++ returns nothing
           // Serial.println("<H J " + String(soundNo) + ">");
         }
-
-      }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
-        int fKey;
-        pch = strtok((char *)payload,"<>F");
-        if (sscanf(pch,"%i %i", &locoNumber, &fKey)==2) {
-          LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
-          int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
-          if (locoNumber < maxNumberOfLocos) {
-            String locoAddress = locoAddresses[locoNumber];
-            Serial.println("<f " + String(locoAddress) + " " + String(keyFunc) + ">");  // DCC++ returns?
-          }
-        }
-
-      } else if (payloadCommand == 't') {             // Direction: reverse(0), forward(1); Speed: eStop(<0), 0-126
-        String payloadStr = payloadChar;
-        // Serial.println(payloadStr);  // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
-        //int locoAddress;
-        int locoSpeed;
-        int locoDirection;
-        pch = strtok((char *)payload,"<>t");
-        if (sscanf(pch,"%i %i %i", &locoNumber, &locoSpeed, &locoDirection)==3) {
-            // Save new settings
-          LocoState[locoNumber][5]=locoSpeed;
-          LocoState[locoNumber][6]=locoDirection;
-          int locoID = locoNumber + 1;  // DCC++ loco register starts at 1
-          webSocket.sendTXT(num, payloadStr);  // confirm new settings to throttle
-          if (locoNumber < maxNumberOfLocos) {
-            Serial.println("<t " + String(locoID)+ " " + locoAddresses[locoNumber] + " " + String(locoSpeed)+ " " + String(locoDirection) + ">");
-          }
-        }
-
-      } else if (payloadCommand == 's') {   // used for getting loco status when changing locos
-          // Send speed and direction for all throttles
-          // int locoAddress;
-          pch = strtok((char *)payload,"<>s");
-          // int testNo = sscanf(pch,"%i", &locoAddress);
-          // Serial.println("Scan No: " + String(testNo) + "  LocoAddress: " + String(locoAddress));
-          if (sscanf(pch,"%i", &locoNumber)==1) {
-            /*for (int x=0; x<maxNumberOfLocos; x++) {
-               if (locoIDs[x] == locoAddress) {
-                locoNumber=x;
-                break;
-               }
-            }
-            int testNoo = sscanf(pch,"%i", &locoAddress);*/
-            Serial.println("LocoNumber: " + String(locoNumber));
-            sendText = "<t "+String(locoNumber)+" "+String(LocoState[locoNumber][5])+" "+String(LocoState[locoNumber][6])+">";  // Speed and direction to control device;
-            webSocket.sendTXT(num, sendText);
-          }
       }
     }
   }
@@ -296,6 +317,50 @@ void powerOff(uint8_t num) {
   webSocket.sendTXT(num, sendText);
   Serial.println("<0>");
 }
+
+void rosterChange(char *pch) {
+  char type = pch[0];
+  char *data = pch+1;
+
+  switch(type) {
+    case 'E':
+      char cabIcon;
+      char cabName;
+      char cabAddress;
+      int cabID;
+      sscanf(data,"%s %s %s %i", &cabIcon, &cabName, &cabAddress, &cabID);
+      cabs[cabID].cabIcon = cabIcon;
+      cabs[cabID].cabName = cabName;
+      cabs[cabID].cabAddress = cabName;
+      // resend page?
+      break;
+
+    case 'M':  //  Move cab location in table
+      int oldLocation;
+      int newLocation;
+      sscanf(data,"%i %i", &oldLocation, &newLocation);
+      struct cabData temp;
+      temp = cabs[newLocation];
+      cabs[newLocation] = cabs[oldLocation];
+      if (oldLocation > newLocation) {  // cab moves toward 0
+        if (oldLocation-newLocation>1) {
+          for (int x = oldLocation; x > newLocation; x--) {
+            cabs[x]=cabs[x-1];
+          }
+        }
+        cabs[newLocation+1]=temp;
+
+      } else { // cab moves away from 0
+        if (newLocation-oldLocation>1) {
+          for (int x=oldLocation; x<newLocation; x++) {
+            cabs[x]=cabs[x+1];
+          }
+        }
+        cabs[newLocation-1]=temp;
+      }
+      break;
+    }
+  }
 
 void sendTurnoutStatusToDevice(int id, uint8_t num) {
   String idTxt;
