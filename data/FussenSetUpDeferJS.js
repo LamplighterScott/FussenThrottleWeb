@@ -1,5 +1,5 @@
 
-var sendText = "";
+var sendTxt = "";
 
 function showTurnouts() {
   max = 15;
@@ -40,8 +40,6 @@ var max = 15;
 var DID;  // Dragged ID
 var DIH;  // Dragged innerHTML
 var LDO;  // Last Dragged Over ID
-var transfer1 = " ";
-var transfer2 = " ";
 
   /* events fired on the draggable target */
   //function drag( event ) {
@@ -81,6 +79,11 @@ var transfer2 = " ";
           }
           rows[DIDN].innerHTML = DIH;
         }
+      } else {
+        var sourceTxt = event.dataTransfer.getData("text");
+        var targetTxt = event.target.id;
+        sendTxt = "<I "+sourceTxt+" "+targetTxt+">";
+        connection.send(sendTxt);
       }
     }
     event.stopPropagation();
@@ -125,21 +128,83 @@ var transfer2 = " ";
     event.stopPropagation();
   };
 
+  function editItem() {
+    DID = this.id;
+    sendTxt = "<I "+DID+">";
+    connection.send(sendTxt);
+  }
+
   // Modal section
   var test;
   var modal = document.getElementById("myModal");
-  function editItem(e) {
-    var x = e.id;
-    test = "button clicked";
-    // document.getElementById("icon").display = "none";
+  var editItemID;
 
-    // sendText = "<s " + curLoco + ">";
-    // connection.send(sendText);
+  function saveEdit() {
+    var icon = getElementById("icon").value;
+    var pin = getElementById("pin").value;
+    var hide = getElementById("hideBtn").value;
+    var title = getElementById("title").value;
+    sendTxt = "<I "+DID+" "+icon+" "+pin+" "+hide+" "+"title"+">";
+    connection.send(sendTxt);
     modal.style.display = "block";
-
   }
+
   window.onclick = function(event) {
     if (event.target == modal) {
       modal.style.display = "none";
     }
+  }
+
+
+  // Communication
+
+  var connection = new WebSocket("ws://" + location.hostname + ":81/", ['arduino']);
+
+  function onMessage(event) {
+    var messageTxt = event.data;
+    var last = messageTxt.lastIndexOf(">");
+    var com = messageTxt.substr(1,last-1);
+    var com1 = com.substr(0,1);
+    if (com1 == "I") {
+      DID = com.substr(2,5);
+      if (modal.display === "none") {
+        var element = document.getElementById(DID);
+        element.hidden = com.substr(6,7);
+        element.innerHTML = com.substr(8);
+      } else {
+        document.getElementById("hideBtn").hidden = com.substr(6,7);
+        document.getElementById("icon").innerHTML = com.substr(8,9);
+        document.getElementById("pin").innerHTML = com.substr(10,14);
+        document.getElementById("title").innerHTML = com.substr(14);
+      }
+    }
+  }
+
+  connection.onopen = function () {
+    connection.send('Connect ' + new Date());
+    tRows.forEach(getLine);
+    cRows.forEach(getLine);
+    function getLine(item) {
+      setTimeout(sendM, 100);
+      function sendM () {
+        sentTxt = "<I "+item.id+">";
+        connection.send(sentTxt);
+      }
+    }
+  }
+
+  connection.onerror = function (error) {
+    console.log('WebSocket Error ', error);
+  }
+
+  connection.onmessage = function (event) {
+    console.log('Server: ', event.data);
+    onMessage(event);
+
+  }
+
+  connection.onclose = function () {
+    console.log('WebSocket connection closed');
+    power = 0;
+    powerShow();
   }

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="FussenSetUpCSS.css">
+</head>
+<script language="javascript" type="text/javascript" src="FussenSetUpJS.js"></script>
+<script src="FussenSetUpDeferJS.js" defer></script>
+
+<body>
+  <div id="tHide">
+    <uL>
+      <div id="turnouts">
+    		<div class="drag" id="T00">TO 0</div>
+    		<div class="drag" id="T01">TO 1</div>
+    		<div class="drag" id="T02">TO 2</div>
+    		<div class="drag" id="T03">TO 3</div>
+    		<div class="drag" id="T04">TO 4</div>
+    		<div class="drag" id="T05">TO 5</div>
+        <div class="drag" id="T06">TO 6</div>
+    		<div class="drag" id="T07">TO 7</div>
+    		<div class="drag" id="T08">TO 8</div>
+    		<div class="drag" id="T09">TO 9</div>
+    		<div class="drag" id="T10">TO 10</div>
+    		<div class="drag" id="T11">TO 11</div>
+        <div class="drag" id="T12">TO 12</div>
+    		<div class="drag" id="T13">TO 13</div>
+    		<div class="drag" id="T14">TO 14</div>
+      </div>
+    </uL>
+  </div>
+  <div id="cHide" hidden>
+    <ul>
+      <div id="cabs">
+    		<div class="drag" id="C00">Cab 0</div>
+    		<div class="drag" id="C01">Cab 1</div>
+    		<div class="drag" id="C02">Cab 2</div>
+    		<div class="drag" id="C03">Cab 3</div>
+    		<div class="drag" id="C04">Cab 4</div>
+    		<div class="drag" id="C05">Cab 5</div>
+        <div class="drag" id="C06">Cab 6</div>
+        <div class="drag" id="C07">Cab 7</div>
+        <div class="drag" id="C08">Cab 8</div>
+        <div class="drag" id="C09">Cab 9</div>
+      </div>
+    </ul>
+  </div>
+
+  <footer class="btn-group">
+    <button onClick="showTurnouts()" type="button" id="btn-TOs" disabled>🛤️</button>
+    <button onClick="showCabs()" type="button" id="btn-cabs">🚂</button>
+    <button onClick="location.href='/root.html';" type="button">📲</button>
+  </footer>
+
+  <!-- Modal -->
+  <div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="close">
+          <a class="btnL" data-dismiss="modal">↩️</a>
+          <a class="btnR" onClick"saveEdit">💾</a>
+        </div>
+        <div class="modal-body">
+          <br><br>
+
+          <form action="/cabEdit" type="text">
+            <div style="text-align:center;font-size:18px;">
+              <input list="icons" id="icon" name="cabIcon" size="3" style="font-size:24px;">
+              <datalist id="icons">
+                <option value="🚂">
+                <option value="🚃">
+                <option value="🚋">
+                <option value="🚊">
+                <option value="🚄">
+                <option value="🚅">
+                <option value="🚞">
+                <option value="🚅">
+                <option value="🚇">
+                <option value="🚅">
+                <option value="🚝">
+                <option value="🚈">
+                <option value="🛺">
+              </datalist><br><br>
+
+              <label for="title">Cab Title</label><br>
+              <input type="text" pattern="[^<>]{15}" id="title" name="title" size="16" default="indéterminé" class="textInput">
+              <br><label for="title" class="note">(15 characters max)</label><br><br>
+
+              <label for="pin">DCC Encoded Cab Number</label><br>
+              <input type"pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
+              <br><label for="pin" class="note">(1-999)</label><br><br>
+
+              <input type="checkbox" id="hideBtn" name"hidden" value="hidden"></input>
+              <label for="hideBtn">Hidden</label>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
