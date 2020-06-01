@@ -155,7 +155,7 @@ var LDO;  // Last Dragged Over ID
     }
   }
 
-
+/*
   // Communication
 
   var connection = new WebSocket("ws://" + location.hostname + ":81/", ['arduino']);
@@ -207,4 +207,4 @@ var LDO;  // Last Dragged Over ID
     console.log('WebSocket connection closed');
     power = 0;
     powerShow();
-  }
+  }*/

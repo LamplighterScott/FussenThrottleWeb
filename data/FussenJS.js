@@ -5,7 +5,10 @@ var direction = 1; // forward
 var clicked = 0;
 var sendText = "";
 
-function selectLoco(loco) {
+function selectLoco() {
+  var fID = this.id;
+  var tID = fID.substr(1);
+  var loco = Number(tID);
   if (curLoco == loco) {
     document.getElementById("locoHeader").innerHTML = "Select Loco";
     curLoco = "None";
@@ -46,10 +49,12 @@ function setZ(idTxt) {
   }
 }
 
-function setF(idTxt) {
+function setF() {
   if (curLoco != "None") {
-    writeToScreen(idTxt);
-    sendText = "<F " + curLoco + " " + idTxt + ">";
+    var fID = this.id;
+    writeToScreen(fID);  //  Eliminate this !!!!!!!!!!!!
+    var tID = fID.substr(1);
+    sendText = "<F " + curLoco + " " + tID + ">";
     connection.send(sendText);
   } else {
     sendText = "No loco selected!";
@@ -182,15 +187,15 @@ function onMessage(event) {
       break;
     }
     case "Y": {
-      var Zarray = com.split(" ");
-      var Rid = Zarray[1];
-      var RstateTxt = Zarray[2];
+      var zArray = com.split(" ");
+      var rID = zArray[1];
+      var rStateTxt = zArray[2];
       var state = Number(RstateTxt);
-      var Ricon = Zarray[3];
-      var innerTxt = document.getElementById(Rid).innerHTML;
+      var rIcon = zArray[3];
+      var innerTxt = document.getElementById(rID).innerHTML;
       var innerArray = Array.from(innerTxt);
       innerArray[0] = Ricon;
-      document.getElementById(Rid).innerHTML = innerArray.join("");
+      document.getElementById(rID).innerHTML = innerArray.join("");
       var textColor = "color:green";
       if (state>0) {
         textColor = "color:red";
@@ -198,9 +203,47 @@ function onMessage(event) {
       document.getElementById(Rid).style = textColor;
       break;
     }
+    case "T": {
+      var avant = com.substr(0,7);
+      var zArray = avant.split(" ");
+      var rID = zArray[0];
+      var rStateTxt = zArray[1];
+      var state = Number(RstateTxt);
+      var hide = zArray[2]
+      var iconTitle = com.substr(8);
+      var element = document.getElementById(rID);
+      element.innerHTML = iconTitle;
+      var textColor = "color:green";
+      if (state>0) {
+        textColor = "color:red";
+      }
+      element.style = textColor;
+      if (hide>0) {
+        element.setAttribute("hidden", "false");
+      } else {
+        element.removeAttribute("hidden");
+      }
+      break;
+    }
+    case "C": {
+      var avant = com.substr(0,5);
+      var zArray = avant.split(" ");
+      var rID = zArray[0];
+      var hide = Number(zArray[1]);
+      var iconTitle = com.substr(6);
+      var element = document.getElementById(rID);
+      element.innerHTML = iconTitle;
+      if (hide>0) {
+        element.setAttribute("hidden", "false");
+      } else {
+        element.removeAttribute("hidden");
+      }
+      break;
+    }
   }
 }
 
+/*
 var connection = new WebSocket("ws://" + location.hostname + ":81/", ['arduino']);
 
 connection.onopen = function () {
@@ -221,4 +264,4 @@ connection.onclose = function () {
   console.log('WebSocket connection closed');
   power = 0;
   powerShow();
-}
+}*/

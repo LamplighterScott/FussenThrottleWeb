@@ -10,65 +10,74 @@
 <div class="dropdown">
   <button id="locoHeader" onClick="showLocos()" class="dropbtn">Select Loco</button>
   <div id="myDropdown" class="dropdown-content">
-    <a id="0" onClick="selectLoco('0')">🚂	SBB 111</a>
-    <a id="1" onClick="selectLoco('1')">🚃	DB 112</a>
-    <a id="2" onClick="selectLoco('2')">🚋	SBB CFF FFS</a>
-    <a id="3" onClick="selectLoco('3')">🚊	DB 239</a>
+    <a id="C00">🚂	SBB 111</a>
+    <a id="C01">🚃	DB 112</a>
+    <a id="C02">🚋	SBB CFF FFS</a>
+    <a id="C03">🚊	DB 239</a>
+    <a id="C04">🚊	DB 239</a>
+    <a id="C05">🚊	DB 239</a>
+    <a id="C06">🚊	DB 239</a>
+    <a id="C07">🚊	DB 239</a>
+    <a id="C08">🚊	DB 239</a>
+    <a id="C09">🚊	DB 239</a>
   </div>
 </div>
 
 <span>
  <ul class="listColumn" style="background-color:#FDF2F7;width: 70%;">
-    <li id="T1" onClick="setZ('T1')">⬆️ To Outer</li>
-    <li id="T2" onClick="setZ('T2')">⬆️ To Inner</li>
-    <li id="T3" onClick="setZ('T3')">⬆️ Yard 1</li>
-    <li id="T4" onClick="setZ('T4')">⬆️ Yard 1-1</li>
-    <li id="T5" onClick="setZ('T5')">⬆️ Outer to Cross</li>
-    <li id="T6" onClick="setZ('T6')">⬆️ Cross to Yard 2</li>
-    <li id="T7" onClick="setZ('T7')">⬆️ Yard 2-2</li>
-    <li id="T8" onClick="setZ('T8')">⬆️ Sidetrack 2-2</li>
-    <li id="C17" onClick="setZ('C17')">🧲 Decoupler 1A</li>
-    <li id="C18" onClick="setZ('C18')">🧲 Decoupler 1B</li>
-    <li id="C19" onClick="setZ('C19')">🧲 Decoupler 2A</li>
-    <li id="C20" onClick="setZ('C20')">🧲 Decoupler 2B</li>
-    <li id="T25" onClick="setZ('T25')">🚦 Semaphore</li>
-    <li id="L30" onClick="setZ('L30')">🏰 Castle</li>
+   <div id="turns">
+      <div id="T00">⬆️ To Outer</div>
+      <div id="T01">⬆️ To Inner</div>
+      <div id="T02">⬆️ Yard 1</div>
+      <div id="T03">⬆️ Yard 1-1</div>
+      <div id="T04">⬆️ Outer to Cross</div>
+      <div id="T05">⬆️ Cross to Yard 2</div>
+      <div id="T06">⬆️ Yard 2-2</div>
+      <div id="T07">⬆️ Sidetrack 2-2</div>
+      <div id="T08">🧲 Decoupler 1A</div>
+      <div id="T09">🧲 Decoupler 1B</div>
+      <div id="T10">🧲 Decoupler 2A</div>
+      <div id="T11">🧲 Decoupler 2B</div>
+      <div id="T12">🚦 Semaphore</div>
+      <div id="T13">🏰 Castle</div>
+      <div id="T14">🏰 Castle</div>
+    </div>
   </ul>
-  <ul class="listColumn" style="background-color:#F4BED5;text-align:center;width: 15%;padding-right: 8px;">
-      <li id="F0" onClick="setF('0')">💡</li>
-      <li id="F1" onClick="setF('1')">🔆</li>
-      <li id="F2" onClick="setF('2')">1️⃣</li>
-      <li id="F3" onClick="setF('3')">2️⃣</li>
-      <li id="F4" onClick="setF('4')">↔️</li>
-      <li id="J0" onClick="setZ('J0')">🔇</li>
-      <li id="J1" onClick="setZ('J1')">🔉</li>
-      <li id="J2" onClick="setZ('J2')">🔊</li>
-      <li id="L1" onClick="setZ('L1')">🏰</li>
+  <ul id="Q" class="listColumn" style="background-color:#F4BED5;text-align:center;width: 15%;padding-right: 8px;">
+      <li id="F0">💡</li>
+      <li id="F1">🔆</li>
+      <li id="F2">1️⃣</li>
+      <li id="F3">2️⃣</li>
+      <li id="F4">↔️</li>
+      <li id="J0">🔇</li>
+      <li id="J1">🔉</li>
+      <li id="J2">🔊</li>
+      <li id="L1">🏰</li>
   </ul>
-  <ul class="listColumn" style="background-color:#EC8EB6;text-align:center;width: 15%;padding-right: 8px;">
-      <li id="J3" onClick="setZ('J3')">📯</li>
-      <li id="J4" onClick="setZ('J4')">🛤️</li>
-      <li id="J5" onClick="setZ('J5')">🚂</li>
-      <li id="J6" onClick="setZ('J6')">🌬️</li>
-      <li id="J7" onClick="setZ('J7')">🎺</li>
-      <li id="J8" onClick="setZ('J8')">🎺</li>
-      <li id="J9" onClick="setZ('J9')">🎺</li>
-      <li id="J10" onClick="setZ('J10')">🛤️</li>
-      <li id="J11" onClick="setZ('J11')">🚢</li>
-      <li id="J12" onClick="setZ('J12')">⛴️</li>
-      <li id="J13" onClick="setZ('J13')">⛪</li>
-      <li id="J14" onClick="setZ('J14')">🏰</li>
-      <li id="J15" onClick="setZ('J15')">🛺</li>
-      <li id="J16" onClick="setZ('J16')">🚒</li>
-      <li id="J17" onClick="setZ('J17')">🚢</li>
-      <li id="J18" onClick="setZ('J18')">🛎️</li>
-      <li id="J19" onClick="setZ('J19')">🚃</li>
-      <li id="J20" onClick="setZ('J20')">🏭</li>
-      <li id="J21" onClick="setZ('J21')">🌆</li>
-      <li id="J22" onClick="setZ('J22')">🚂</li>
-      <li id="J23" onClick="setZ('J23')">🐕</li>
-      <li id="J24" onClick="setZ('J24')">🥳</li>
-      <li id="J25" onClick="setZ('J26')">🇮🇳</li>
+  <ul id="pSounds" class="listColumn" style="background-color:#EC8EB6;text-align:center;width: 15%;padding-right: 8px;">
+      <li id="J3">📯</li>
+      <li id="J4">🛤️</li>
+      <li id="J5">🚂</li>
+      <li id="J6">🌬️</li>
+      <li id="J7">🎺</li>
+      <li id="J8">🎺</li>
+      <li id="J9">🎺</li>
+      <li id="J10">🛤️</li>
+      <li id="J11">🚢</li>
+      <li id="J12">⛴️</li>
+      <li id="J13">⛪</li>
+      <li id="J14">🏰</li>
+      <li id="J15">🛺</li>
+      <li id="J16">🚒</li>
+      <li id="J17">🚢</li>
+      <li id="J18">🛎️</li>
+      <li id="J19">🚃</li>
+      <li id="J20">🏭</li>
+      <li id="J21">🌆</li>
+      <li id="J22">🚂</li>
+      <li id="J23">🐕</li>
+      <li id="J24">🥳</li>
+      <li id="J25">🇮🇳</li>
   </ul>
 </span>
 
@@ -87,5 +96,6 @@
 </body>
 
 <script language="javascript" type="text/javascript" src="FussenJS.js"></script>
+<script src="FussenDeferJS.js" defer></script>
 
 </html>
