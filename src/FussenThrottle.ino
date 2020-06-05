@@ -8,7 +8,7 @@
 #include <ESP8266WiFi.h> // includes WiFiClient.h
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>  //ESP Web Server Library to host a web page
-#include <FS.h> // SPIFFS Library
+#include <FS.h> // LittleFS / SPIFFS Library
 #include <DNSServer.h>
 #include <WebSocketsServer.h>
 
@@ -25,8 +25,8 @@ typedef struct {
   char pin[4];  // Arduino GPIO number
   char title[16];  // any string for name of output
   char type[2];  // T = turnout/semaphore, C = decoupler, L = Light
-  char icon0[11];  // icons for state 0 (closed) and 1 (thrown)
-  char icon1[11];
+  char icon0[5];  // icons for state 0 (closed) and 1 (thrown)
+  char icon1[5];
   int iFlag;  // See DCC++ Outlets for bits explanation, WiThrottle uses bits 3-6 to communicate output type to DCC++ in Load Outputs
               // T=8, C=16, F=32, L=64
   int zStatus;  // 0 = closed (straight, green, off, 0(DCC++)), 1 = thrown (round, diverge, red, on, 1(DCC++))
@@ -57,21 +57,21 @@ typedef struct {
   const int id;  // system id number w/o system and type chars, used by MEGA
   char pin[4];  // DCC encoded loco number 1-999
   char title[16];  // any string for throttle display name of locomotice
-  char icon0[11];  // display icon choosen for locomotive
+  char icon0[5];  // display icon choosen for locomotive
   char hide[2]; // =1 if not to be display in throttle control
 } cData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 cData ccc[]= {
-  {0, "111", "SBB 111   ", "\00001F682", "0"},
-  {1, "003", "DB 112    ", "\00001F683", "0"},
-  {2, "046", "CFF FFS123", "\00001F682", "0"},
-  {3, "003", "DB 239    ", "\00001F686", "0"},
-  {4, "000", "Steam     ", "\00001F682", "1"},
-  {5, "000", "Bullet    ", "\00001F685", "1"},
-  {6, "000", "Monorail  ", "\00001F69D", "1"},
-  {7, "000", "Mountain  ", "\00001F69E", "1"},
-  {8, "000", "Trolley   ", "\00001F68E", "1"},
-  {9, "000", "Tuktuk    ", "\00001F6FA", "1"}
+  {0, "111", "SBB 111", "\U0001F682", "0"},
+  {1, "003", "DB 112", "\U0001F683", "0"},
+  {2, "046", "CFF FFS123", "\U0001F682", "0"},
+  {3, "003", "DB 239", "\U0001F686", "0"},
+  {4, "000", "Steam", "\U0001F682", "1"},
+  {5, "000", "Bullet", "\U0001F685", "1"},
+  {6, "000", "Monorail", "\U0001F69D", "1"},
+  {7, "000", "Mountain", "\U0001F69E", "1"},
+  {8, "000", "Trolley", "\U0001F68E", "1"},
+  {9, "000", "Tuktuk", "\U0001F6FA", "1"}
 };
 const int totalLocos = 10;  // Must include the zero row at the end
 
@@ -79,7 +79,7 @@ int tOrder[15] = {0,1,2,3,4,5,6,7,8,9,10,12,13,14};
 int cOrder[10] = {0,1,2,3,4,5,6,7,8,9};
 int LocoState[10][7]={{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}}; // Set-up Function states [number of], (light, beam, cab 1, cab 2, shunt, speed, direction)
 int locoNumber = 0;  // global variable for current target loco number
-char printTxt[30];  // buffer for creating communication cstrings
+char printTxt[40];  // buffer for creating communication cstrings
 
 
 //==============================================================
@@ -161,6 +161,7 @@ void startMDNS(){
 
 void startServer() {
   server.on("/", handleRoot);
+  server.on("/FussenSetUpHTML.html", handleSetup);
   server.on("/hotspot-detect.html", handle_CaptivePortal);
   server.onNotFound([]() {                              // If the client requests any URI
       if (!handleFileRead(server.uri()))                  // send it if it exists
@@ -181,6 +182,11 @@ void handleRoot() {
     String path = "/FussenHTML.html";
     handleFileRead(path);
     // Serial.println("Root page loaded");
+}
+
+void handleSetup() {
+  String path = "/FussenSetUpHTML.html";
+  handleFileRead(path);
 }
 
 
@@ -221,29 +227,29 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       break;
     }
     case WStype_TEXT: {                     // if new text data is received - command from control device processor
-      // Serial.printf("[%u] get Text: %s\n", num, payload);
+      Serial.printf("[%u] get Text: %s\n", num, payload);
       char *pch = strtok((char *)payload,"<>");
 
       //const char payloadCommand = (const char) payload[1];
-      const char *payloadChar = (const char *) payload;
       char payloadCommand = payload[1];
 
       if (payloadCommand == '0') {                    // Power off
         powerOff(num);
 
       } else if (payloadCommand == '1') {             // Power on
-        Serial.println("<1>");
-        webSocket.sendTXT(num, payloadChar);
+        const char *on = "<1>";
+        Serial.println(on);
+        webSocket.sendTXT(num, on);
 
       }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
         int fKey;
         pch = strtok((char *)payload,"F");
-        if (sscanf(pch,"%i %i", &locoNumber, &fKey)==2) {
+        if (sscanf(pch,"%i %i", &fKey, &locoNumber)==2) {
           LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
           int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
           if (locoNumber < totalLocos) {
             //Serial.println("<f " + String(ccc[locoNumber].pin) + " " + String(keyFunc) + ">");  // DCC++ returns?
-            printf(printTxt, "<f %s %i>", ccc[locoNumber].pin, keyFunc);
+            sprintf(printTxt, "<f %s %i>", ccc[locoNumber].pin, keyFunc);
             Serial.println(printTxt);
           }
         }
@@ -264,10 +270,10 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         }
 
 
-      } else if (payloadCommand == 's') {   // used for getting loco status when changing locos
+      } else if (payloadCommand == 'C') {   // used for getting loco status when changing locos
           // Send speed and direction for all throttles
           // int locoAddress;
-          pch = strtok((char *)payload,"s");
+          pch = strtok((char *)payload,"C");
           // int testNo = sscanf(pch,"%i", &locoAddress);
           // Serial.println("Scan No: " + String(testNo) + "  LocoAddress: " + String(locoAddress));
           if (sscanf(pch,"%i", &locoNumber)==1) {
@@ -281,12 +287,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
             // Serial.println("LocoNumber: " + String(locoNumber));
             // sendText = "<t "+String(locoNumber)+" "+String(LocoState[locoNumber][5])+" "+String(LocoState[locoNumber][6])+">";  // Speed and direction to control device;
             // webSocket.sendTXT(num, sendText);
-            printf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
+            sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
             webSocket.sendTXT(num, printTxt);
           }
 
       } else if (payloadCommand == 't') {             // Direction: reverse(0), forward(1); Speed: eStop(<0), 0-126
-        // String payloadStr = payloadChar;
         // Serial.println(payloadStr);  // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
         //int locoAddress;
         int locoSpeed;
@@ -298,21 +303,27 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           LocoState[locoNumber][6]=locoDirection;
           int locoID = locoNumber + 1;  // DCC++ loco register starts at 1
           // webSocket.sendTXT(num, payloadStr);  // confirm new settings to throttle
+          // char *payloadChar = (char *)payload;
+          char *payloadChar = strcat((char *)payload, ">");
           webSocket.sendTXT(num, payloadChar);  // confirm new settings to throttle
           if (locoNumber < totalLocos) {
             // Serial.println("<t " + String(locoID)+ " " + ccc[locoNumber].pin + " " + String(locoSpeed)+ " " + String(locoDirection) + ">");
-            printf(printTxt, "<t %i %s %i %i>", locoID, ccc[locoNumber].pin, locoSpeed, locoDirection);
+            sprintf(printTxt, "<t %i %s %i %i>", locoID, ccc[locoNumber].pin, locoSpeed, locoDirection);
             Serial.println(printTxt);
           }
         }
 
       } else if (payloadCommand == 'Z') { // Turnouts, decouplers and sounds <Z Type&ID>
-        pch = strtok((char *)payload,"Z ");
+        // pch = strtok((char *)payload,"Z ");
+
         pch = strtok(pch,"Z ");
         char type = pch[0];
-        char *cID = strtok(pch, "AJTC");
+        Serial.print("Type:" + String(type) + "\n");
+        char *cID;
+        cID = pch+1;
         int id;
         sscanf(cID,"%i", &id);
+        Serial.printf("id:%i\n", id);
 
         if (type == 'A') {  // Action: Change status of Turnouts, Decouplers, Signals and Lights
           turnoutAction(id, num);
@@ -324,21 +335,24 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           // Instructions in DFPlayer: -1=soundDN, 0=soundUP, sounds: 1 to x, Action 0=stop sound, execute by DF Player library function
           // Serial.println("<"+String(pch)+">"); //  DCC++ returns nothing
           // Serial.println("<J " + String(soundNo) + ">");
-          printf(printTxt, "< %s 1>", pch);
+          sprintf(printTxt, "< %s 1>", pch);
           Serial.println(printTxt);
+
         } else if (type == 'T') { // request for turnout data
           // sendTurnoutDataToDevice(id)
           int i = tOrder[id];
           tData t = ttt[i];
           int state = t.zStatus;
           char *icon = (state>0) ? t.icon1 : t.icon0;
-          printf(printTxt, "<T %s %s %s %s %s>", pch, t.zStatus, t.hide, icon, t.title);
+          sprintf(printTxt, "<T %s %i %s %s %s>", pch, state, t.hide, icon, t.title);
+          Serial.print(String(strlen(printTxt)));
+          Serial.println(printTxt);
           webSocket.sendTXT(num, printTxt);
 
         } else if (type == 'C') {// request for cab data
           int i = cOrder[id];
           cData c = ccc[i];
-          printf(printTxt, "<T %s %s %s %s>", pch, c.hide, c.icon0, c.title);
+          sprintf(printTxt, "<C %s %s %s %s>", pch, c.hide, c.icon0, c.title);
           webSocket.sendTXT(num, printTxt);
 
         }
@@ -361,7 +375,7 @@ void powerOff(uint8_t num) {
   // sendText = "<t "+String(locoNumber)+" "+String(LocoState[locoNumber][5])+" "+String(LocoState[locoNumber][6])+">";  // Speed and direction to control device;
   // webSocket.sendTXT(num, sendText);
   Serial.println(offText);
-  printf(printTxt, "<t %i %i %i>", LocoState[locoNumber][5], LocoState[locoNumber][6]);
+  sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
   webSocket.sendTXT(num, printTxt);
 }
 
@@ -382,11 +396,11 @@ void turnoutAction(int id, uint8_t num) {
   // idTxt = String(t.id);
   // typeTxt = String(t.type);
   // Serial.println("<Z " + idTxt + " " + stateTxt + ">");  //  To Arduino
-  printf(printTxt, "<Z %i %i>", i, t.zStatus);
+  sprintf(printTxt, "<Z %i %i>", i, t.zStatus);
   Serial.println(printTxt);
   // sendText = "<Y " + typeTxt + idTxt + " " + stateTxt + " " + icon + ">"; // To device
   // webSocket.sendTXT(num, sendText);
-  printf(printTxt, "<Y %s%i %i %s>", t.type, id, t.zStatus, icon);
+  sprintf(printTxt, "<Y %s%i %i %s>", t.type, id, t.zStatus, icon);
   webSocket.sendTXT(num, printTxt);
 
 }  // turnoutAction
@@ -397,15 +411,15 @@ void turnoutAction(int id, uint8_t num) {
 
 void sendSetUpData(uint8_t num, char *source) {  // for settings page
   char type = source[0];
-  char *pch = strtok(source, "TC");
+  char *pID = strtok(source, "TC");
   int dID;
-  sscanf(pch,"%i", &dID);
+  sscanf(pID,"%i", &dID);
   if (type == 'T') {
     int id = tOrder[dID];
     tData t = ttt[id];
     // sendText = "<I "+String(source)+" "+data.hide+" "+data.icon0+" "+data.pin+" "+data.title+">";  // <I ID Hide Icon Title PinNo>
     // webSocket.sendTXT(num, sendText);
-    printf(printTxt, "<I %s %s %s %s %s>", source, t.hide, t.icon0, t.pin, t.title);
+    sprintf(printTxt, "<I %s %s %s %s %s>", source, t.hide, t.icon0, t.pin, t.title);
     webSocket.sendTXT(num, printTxt);
 
   } else if (type == 'C') {
@@ -413,7 +427,7 @@ void sendSetUpData(uint8_t num, char *source) {  // for settings page
     cData c = ccc[id];
     // sendText = "<I "+String(source)+" "+data.hide+" "+data.icon0+" "+ data.pin+" "+ data.title+">";  // <I ID Hide Icon Title PinNo>
     // webSocket.sendTXT(num, sendText);
-    printf(printTxt, "<I %s %s %s %s %s>", source, c.hide, c.icon0, c.pin, c.title);
+    sprintf(printTxt, "<I %s %s %s %s %s>", source, c.hide, c.icon0, c.pin, c.title);
     webSocket.sendTXT(num, printTxt);
 
   }
@@ -569,13 +583,13 @@ void loadOutputs() { // Accessories/Outputs
   {
       // Serial.println("<Z "+String(t.id)+" "+t.pin+" "+String(t.iFlag)+">");
 
-      printf(printTxt, "<Z %i %s %i>", t.id, t.pin, t.iFlag);
+      sprintf(printTxt, "<Z %i %s %i>", t.id, t.pin, t.iFlag);
       Serial.println(printTxt);
       zStatus = 0;
       if (t.zStatus > 2)
         zStatus = 1;
       // Serial.print("<Z "+String(t.id)+" "+String(zStatus)+">");
-      printf(printTxt, "<Z %i %i>", t.id, zStatus);
+      sprintf(printTxt, "<Z %i %i>", t.id, zStatus);
       Serial.print(printTxt);
   }
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width">
 <link rel="stylesheet" href="FussenCSS.css">
 </head>
-<body style="background-color:#30081A">
+<body style="background-color:#30081A"  onload="initElements()">
 
 <div class="dropdown">
   <button id="locoHeader" onClick="showLocos()" class="dropbtn">Select Loco</button>
@@ -23,27 +23,26 @@
   </div>
 </div>
 
-<span>
  <ul class="listColumn" style="background-color:#FDF2F7;width: 70%;">
    <div id="turns">
-      <div id="T00">⬆️ To Outer</div>
-      <div id="T01">⬆️ To Inner</div>
-      <div id="T02">⬆️ Yard 1</div>
-      <div id="T03">⬆️ Yard 1-1</div>
-      <div id="T04">⬆️ Outer to Cross</div>
-      <div id="T05">⬆️ Cross to Yard 2</div>
-      <div id="T06">⬆️ Yard 2-2</div>
-      <div id="T07">⬆️ Sidetrack 2-2</div>
-      <div id="T08">🧲 Decoupler 1A</div>
-      <div id="T09">🧲 Decoupler 1B</div>
-      <div id="T10">🧲 Decoupler 2A</div>
-      <div id="T11">🧲 Decoupler 2B</div>
-      <div id="T12">🚦 Semaphore</div>
-      <div id="T13">🏰 Castle</div>
-      <div id="T14">🏰 Castle</div>
+      <li id="T00">⬆️</li>
+      <li id="T01">⬆️ To Inner</li>
+      <li id="T02">⬆️ Yard 1</li>
+      <li id="T03">⬆️ Yard 1-1</li>
+      <li id="T04">⬆️ Outer to Cross</li>
+      <li id="T05">⬆️ Cross to Yard 2</li>
+      <li id="T06">⬆️ Yard 2-2</li>
+      <li id="T07">⬆️ Sidetrack 2-2</li>
+      <li id="T08">🧲 Decoupler 1A</li>
+      <li id="T09">🧲 Decoupler 1B</li>
+      <li id="T10">🧲 Decoupler 2A</li>
+      <li id="T11">🧲 Decoupler 2B</li>
+      <li id="T12">🚦 Semaphore</li>
+      <li id="T13">🏰 Castle</li>
+      <li id="T14">🏰 Castle</li>
     </div>
   </ul>
-  <ul id="Q" class="listColumn" style="background-color:#F4BED5;text-align:center;width: 15%;padding-right: 8px;">
+  <ul id="fLoco" class="listColumn" style="background-color:#F4BED5;text-align:center;width: 15%;padding-right: 8px;">
       <li id="F0">💡</li>
       <li id="F1">🔆</li>
       <li id="F2">1️⃣</li>
@@ -79,14 +78,14 @@
       <li id="J24">🥳</li>
       <li id="J25">🇮🇳</li>
   </ul>
-</span>
+
 
 <div class="btn-group">
 	<button id="powerButton" onClick="sendPower()">⭕</button>
 	<button id="reverseButton" onClick="setDir(0)">⏪</button>
 	<button id="stopButton" onClick="stopSpeed()">🛑</button>
 	<button id="forwardButton" onClick="setDir(1)">⏩</button>
-	<button onClick="location.href=''/FussenSetUpCabsHTML.html';" type="button">⚙️</button>
+	<button onClick="location.href='/FussenSetUpHTML.html';" type="button">⚙️</button>
 </div>
 
 <div class="slidecontainer">
@@ -96,6 +95,5 @@
 </body>
 
 <script language="javascript" type="text/javascript" src="FussenJS.js"></script>
-<script src="FussenDeferJS.js" defer></script>
 
 </html>

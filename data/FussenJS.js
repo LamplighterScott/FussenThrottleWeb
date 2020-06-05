@@ -5,17 +5,60 @@ var direction = 1; // forward
 var clicked = 0;
 var sendText = "";
 
-function selectLoco() {
-  var fID = this.id;
-  var tID = fID.substr(1);
-  var loco = Number(tID);
-  if (curLoco == loco) {
+function initElements() {
+  var tElement = document.getElementById("turns");
+  var tRows = tElement.querySelectorAll("*");
+  var cElement = document.getElementById("myDropdown");
+  var cRows = cElement.querySelectorAll("*");
+  var fElement = document.getElementById("fLoco");
+  var fRows = fElement.querySelectorAll("*");
+  var pElement = document.getElementById("pSounds");
+  var pRows = pElement.querySelectorAll("*");
+
+  tRows.forEach(function(item){
+    item.addEventListener("click", function() {
+      setZ(item.id);
+    });
+    getInner(item);
+  });
+
+  cRows.forEach(function(item){
+    item.addEventListener("click", function() {
+      selectLoco(item.id);
+    });
+    getInner(item);
+  });
+
+  fRows.forEach(function(item){
+    item.addEventListener("click", function() {
+      setZ(item.id);
+    });
+  });
+
+  pRows.forEach(function(item){
+    item.addEventListener("click", function() {
+      setZ(item.id);
+    });
+  });
+
+}
+
+function getInner(item) {
+  setTimeout(function() {
+    var tID = item.id;
+    sendText = "<Z " + tID + ">";
+    connection.send(sendText);
+  }, 200);
+}
+
+function selectLoco(fID) {
+  if (curLoco == fID) {
     document.getElementById("locoHeader").innerHTML = "Select Loco";
     curLoco = "None";
   } else {
-    document.getElementById("locoHeader").innerHTML = document.getElementById(loco).innerHTML;
-    curLoco = loco;
-    sendText = "<s " + curLoco + ">";
+    document.getElementById("locoHeader").innerHTML = document.getElementById(fID).innerHTML;
+    curLoco = fID;
+    sendText = "<" + curLoco + ">";
     connection.send(sendText);
   }
 }
@@ -38,30 +81,25 @@ window.onclick = function(event) {
   }
 }
 
-function setZ(idTxt) {
+function setZ(tID) {
   if (power>0) {
-    writeToScreen(idTxt);
-    sendText = "<Z " + idTxt + ">";
-    connection.send(sendText);
+    writeToScreen(tID);
+    if (tID[0] == "F" ) {
+      if (curLoco != "None") {
+        sendText = "<" + tID + " " + curLoco + ">";
+        connection.send(sendText);
+      } else {
+        sendText = "No loco selected!";
+      }
+    } else {
+      sendText = "<Z " + tID + ">";
+      connection.send(sendText);
+    }
   } else {
     sendText = "Power is off";
-    writeToScreen(sendText);
   }
+  writeToScreen(sendText);
 }
-
-function setF() {
-  if (curLoco != "None") {
-    var fID = this.id;
-    writeToScreen(fID);  //  Eliminate this !!!!!!!!!!!!
-    var tID = fID.substr(1);
-    sendText = "<F " + curLoco + " " + tID + ">";
-    connection.send(sendText);
-  } else {
-    sendText = "No loco selected!";
-    writeToScreen(sendText);
-  }
-}
-
 
 function sendPower() {
   power = Math.abs(power-1);
@@ -204,13 +242,13 @@ function onMessage(event) {
       break;
     }
     case "T": {
-      var avant = com.substr(0,7);
+      var avant = com.substr(2,9);
       var zArray = avant.split(" ");
       var rID = zArray[0];
       var rStateTxt = zArray[1];
-      var state = Number(RstateTxt);
-      var hide = zArray[2]
-      var iconTitle = com.substr(8);
+      var state = Number(rStateTxt);
+      var hide = Number(zArray[2]);
+      var iconTitle = com.substr(10);
       var element = document.getElementById(rID);
       element.innerHTML = iconTitle;
       var textColor = "color:green";
@@ -226,11 +264,11 @@ function onMessage(event) {
       break;
     }
     case "C": {
-      var avant = com.substr(0,5);
+      var avant = com.substr(2,7);
       var zArray = avant.split(" ");
       var rID = zArray[0];
       var hide = Number(zArray[1]);
-      var iconTitle = com.substr(6);
+      var iconTitle = com.substr(8);
       var element = document.getElementById(rID);
       element.innerHTML = iconTitle;
       if (hide>0) {
@@ -243,7 +281,6 @@ function onMessage(event) {
   }
 }
 
-/*
 var connection = new WebSocket("ws://" + location.hostname + ":81/", ['arduino']);
 
 connection.onopen = function () {
@@ -263,5 +300,5 @@ connection.onmessage = function (event) {
 connection.onclose = function () {
   console.log('WebSocket connection closed');
   power = 0;
-  powerShow();
-}*/
+  showPower();
+}

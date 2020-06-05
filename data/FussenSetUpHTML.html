@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width">
 <link rel="stylesheet" href="FussenSetUpCSS.css">
 </head>
-<script language="javascript" type="text/javascript" src="FussenSetUpJS.js"></script>
-<script src="FussenSetUpDeferJS.js" defer></script>
+<script language="javascript" type="text/javascript" src="FussenSetUpJS.js" defer></script>
+<!-- script src="FussenSetUpDeferJS.js" defer></script -->
 
 <body>
   <div id="tHide">
@@ -50,7 +50,7 @@
   <footer class="btn-group">
     <button onClick="showTurnouts()" type="button" id="btn-TOs" disabled>🛤️</button>
     <button onClick="showCabs()" type="button" id="btn-cabs">🚂</button>
-    <button onClick="location.href='/root.html';" type="button">📲</button>
+    <button onClick="location.href='/';" type="button">📲</button>
   </footer>
 
   <!-- Modal -->
@@ -61,14 +61,15 @@
       <div class="modal-content">
         <div class="close">
           <a class="btnL" data-dismiss="modal">↩️</a>
-          <a class="btnR" onClick"saveEdit">💾</a>
+          <a class="btnL" data-dismiss="modal">&times;</a>
+          <a class="btnR" onClick="saveEdit()">💾</a>
         </div>
         <div class="modal-body">
           <br><br>
 
           <form action="/cabEdit" type="text">
             <div style="text-align:center;font-size:18px;">
-              <input list="icons" id="icon" name="cabIcon" size="3" style="font-size:24px;">
+              <input list="icons" id="lIcon" name="cabIcon" size="3" style="font-size:24px;">
               <datalist id="icons">
                 <option value="🚂">
                 <option value="🚃">
@@ -93,7 +94,7 @@
               <input type"pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
               <br><label for="pin" class="note">(1-999)</label><br><br>
 
-              <input type="checkbox" id="hideBtn" name"hidden" value="hidden"></input>
+              <input type="checkbox" id="hideBtn" name"hidden" value="0"></input>
               <label for="hideBtn">Hidden</label>
             </div>
           </form>

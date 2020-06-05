@@ -111,10 +111,12 @@ ul {
 }
 
 .btnR {
+  touch-action: manipulation;
   float:right;
 }
 
 .btnL {
+  touch-action: manipulation;
   float:left;
 }
 
