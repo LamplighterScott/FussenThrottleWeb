@@ -84,14 +84,19 @@ window.onclick = function(event) {
 function setZ(tID) {
   if (power>0) {
     writeToScreen(tID);
-    if (tID[0] == "F" ) {
+    var com = tID[0];
+    if (com == "F" ) {
       if (curLoco != "None") {
-        sendText = "<" + tID + " " + curLoco + ">";
+        sendText = "<" + tID + ">";
         connection.send(sendText);
       } else {
-        sendText = "No loco selected!";
+        sendText = "--No loco selected!";
       }
-    } else {
+    } else if (com == "T") {
+      var id = tID.substr(1);
+      sendText = "<Z " + "A" + id + ">";
+      connection.send(sendText);
+    } else if (com == "J") {
       sendText = "<Z " + tID + ">";
       connection.send(sendText);
     }
@@ -205,13 +210,13 @@ function onMessage(event) {
       break;
     }
     case "t": {
-      var Tarray = com.split(" ");
-      var RcabTxt = Tarray[1];
-      if (RcabTxt == curLoco) {
-        var RspeedTxt = Tarray[2];
-        var RdirectionTxt = Tarray[3];
-        speed = Number(RspeedTxt);
-        direction = Number(RdirectionTxt);
+      var tArray = com.split(" ");
+      var rCabTxt = tArray[1];
+      if (rCabTxt == curLoco) {
+        var rSpeedTxt = tArray[2];
+        var rDirectionTxt = tArray[3];
+        speed = Number(rSpeedTxt);
+        direction = Number(rDirectionTxt);
         if (speed<0) {
           speed = 0;
         } else {
@@ -227,22 +232,23 @@ function onMessage(event) {
     case "Y": {
       var zArray = com.split(" ");
       var rID = zArray[1];
+      var element = document.getElementById(rID);
       var rStateTxt = zArray[2];
-      var state = Number(RstateTxt);
+      var state = Number(rStateTxt);
       var rIcon = zArray[3];
-      var innerTxt = document.getElementById(rID).innerHTML;
+      var innerTxt = element.innerHTML;
       var innerArray = Array.from(innerTxt);
-      innerArray[0] = Ricon;
-      document.getElementById(rID).innerHTML = innerArray.join("");
+      innerArray[0] = rIcon;
+      element.innerHTML = innerArray.join("");
       var textColor = "color:green";
       if (state>0) {
         textColor = "color:red";
       }
-      document.getElementById(Rid).style = textColor;
+      element.style = textColor;
       break;
     }
     case "T": {
-      var avant = com.substr(2,9);
+      var avant = com.substr(2,7);
       var zArray = avant.split(" ");
       var rID = zArray[0];
       var rStateTxt = zArray[1];
@@ -257,14 +263,16 @@ function onMessage(event) {
       }
       element.style = textColor;
       if (hide>0) {
-        element.setAttribute("hidden", "false");
+        //element.setAttribute("hidden", "false");
+        element.style.display = "none";
       } else {
-        element.removeAttribute("hidden");
+        //element.removeAttribute("hidden");
+        element.style.display = "block";
       }
       break;
     }
     case "C": {
-      var avant = com.substr(2,7);
+      var avant = com.substr(2,5);
       var zArray = avant.split(" ");
       var rID = zArray[0];
       var hide = Number(zArray[1]);

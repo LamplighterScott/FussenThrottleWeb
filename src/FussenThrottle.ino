@@ -31,7 +31,7 @@ typedef struct {
               // T=8, C=16, F=32, L=64
   int zStatus;  // 0 = closed (straight, green, off, 0(DCC++)), 1 = thrown (round, diverge, red, on, 1(DCC++))
   int present;  // 0 = not present, 1 = present in DCC++
-  char hide[2]; // =1 if not to be displayed in throttle control screen
+  char show[2]; // =1 if not to be displayed in throttle control screen
 } tData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 tData ttt[]= {
@@ -58,7 +58,7 @@ typedef struct {
   char pin[4];  // DCC encoded loco number 1-999
   char title[16];  // any string for throttle display name of locomotice
   char icon0[5];  // display icon choosen for locomotive
-  char hide[2]; // =1 if not to be display in throttle control
+  char show[2]; // =1 if not to be display in throttle control
 } cData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 cData ccc[]= {
@@ -75,7 +75,7 @@ cData ccc[]= {
 };
 const int totalLocos = 10;  // Must include the zero row at the end
 
-int tOrder[15] = {0,1,2,3,4,5,6,7,8,9,10,12,13,14};
+int tOrder[15] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14};
 int cOrder[10] = {0,1,2,3,4,5,6,7,8,9};
 int LocoState[10][7]={{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0}}; // Set-up Function states [number of], (light, beam, cab 1, cab 2, shunt, speed, direction)
 int locoNumber = 0;  // global variable for current target loco number
@@ -243,8 +243,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 
       }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
         int fKey;
-        pch = strtok((char *)payload,"F");
-        if (sscanf(pch,"%i %i", &fKey, &locoNumber)==2) {
+        //pch = strtok((char *)payload,"F");
+        pch++;
+        if (sscanf(pch,"%d %d", &fKey)==1) {
           LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
           int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
           if (locoNumber < totalLocos) {
@@ -255,96 +256,74 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         }
 
       } else if (payloadCommand == 'I') {  // settings: set-up, move and edit
-        pch = strtok((char *)payload,"I");
+        pch += 2;  // skip ove "I "
         char source[4];
         char target[4]; // also icon
-
         int x = sscanf(pch,"%s %s", source, target);
         if (x == 1) {
           sendSetUpData(num, source);
         } else if (x == 2) {
           moveItem(source, target);
-        } else {
-          updateItemData(pch);
-
         }
 
+      } else if (payloadCommand == 'K') {
+          saveItemData(num, pch);  // Updates ESP array
 
       } else if (payloadCommand == 'C') {   // used for getting loco status when changing locos
           // Send speed and direction for all throttles
-          // int locoAddress;
-          pch = strtok((char *)payload,"C");
-          // int testNo = sscanf(pch,"%i", &locoAddress);
-          // Serial.println("Scan No: " + String(testNo) + "  LocoAddress: " + String(locoAddress));
-          if (sscanf(pch,"%i", &locoNumber)==1) {
-            /*for (int x=0; x<totalLocos; x++) {
-               if (locoIDs[x] == locoAddress) {
-                locoNumber=x;
-                break;
-               }
-            }
-            int testNoo = sscanf(pch,"%i", &locoAddress);*/
-            // Serial.println("LocoNumber: " + String(locoNumber));
-            // sendText = "<t "+String(locoNumber)+" "+String(LocoState[locoNumber][5])+" "+String(LocoState[locoNumber][6])+">";  // Speed and direction to control device;
-            // webSocket.sendTXT(num, sendText);
+          pch++;
+          int lN;
+          if (sscanf(pch,"%d", &lN)==1) {
+            locoNumber = cOrder[lN];
             sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
             webSocket.sendTXT(num, printTxt);
           }
 
       } else if (payloadCommand == 't') {             // Direction: reverse(0), forward(1); Speed: eStop(<0), 0-126
-        // Serial.println(payloadStr);  // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
-        //int locoAddress;
+        // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
         int locoSpeed;
         int locoDirection;
-        pch = strtok((char *)payload,"t");
-        if (sscanf(pch,"%i %i %i", &locoNumber, &locoSpeed, &locoDirection)==3) {
+        char *pch2;
+        pch2 = pch + 6;
+        if (sscanf(pch2,"%d %d", &locoSpeed, &locoDirection) == 2) {
             // Save new settings
+          // Serial.println("locoNumber:" + String(locoNumber));
           LocoState[locoNumber][5]=locoSpeed;
           LocoState[locoNumber][6]=locoDirection;
           int locoID = locoNumber + 1;  // DCC++ loco register starts at 1
-          // webSocket.sendTXT(num, payloadStr);  // confirm new settings to throttle
-          // char *payloadChar = (char *)payload;
-          char *payloadChar = strcat((char *)payload, ">");
-          webSocket.sendTXT(num, payloadChar);  // confirm new settings to throttle
+          sprintf(printTxt, "<%s>", pch);
+          webSocket.sendTXT(num, printTxt);  // confirm new settings to throttle
           if (locoNumber < totalLocos) {
-            // Serial.println("<t " + String(locoID)+ " " + ccc[locoNumber].pin + " " + String(locoSpeed)+ " " + String(locoDirection) + ">");
             sprintf(printTxt, "<t %i %s %i %i>", locoID, ccc[locoNumber].pin, locoSpeed, locoDirection);
             Serial.println(printTxt);
           }
         }
 
       } else if (payloadCommand == 'Z') { // Turnouts, decouplers and sounds <Z Type&ID>
-        // pch = strtok((char *)payload,"Z ");
 
-        pch = strtok(pch,"Z ");
+        pch += 2;
         char type = pch[0];
-        Serial.print("Type:" + String(type) + "\n");
         char *cID;
         cID = pch+1;
         int id;
-        sscanf(cID,"%i", &id);
-        Serial.printf("id:%i\n", id);
+        sscanf(cID,"%d", &id);
 
         if (type == 'A') {  // Action: Change status of Turnouts, Decouplers, Signals and Lights
-          turnoutAction(id, num);
+          turnoutAction(pch, id, num);
 
         } else if (type == 'J') { // hange status of sounds
-          // int soundNo;
-          // sscanf(pch,"%i", &soundNo);
           // Sound instructions from control device: 0=stopLoop, 1=soundDN, 2=soundUP, sounds: 3 to x
           // Instructions in DFPlayer: -1=soundDN, 0=soundUP, sounds: 1 to x, Action 0=stop sound, execute by DF Player library function
-          // Serial.println("<"+String(pch)+">"); //  DCC++ returns nothing
-          // Serial.println("<J " + String(soundNo) + ">");
-          sprintf(printTxt, "< %s 1>", pch);
+          pch++;
+          sprintf(printTxt, "<J %s>", pch);
           Serial.println(printTxt);
 
-        } else if (type == 'T') { // request for turnout data
-          // sendTurnoutDataToDevice(id)
+        } else if (type == 'T') { // request for turnout data. SendTurnoutDataToDevice(id)
           int i = tOrder[id];
           tData t = ttt[i];
           int state = t.zStatus;
           char *icon = (state>0) ? t.icon1 : t.icon0;
-          sprintf(printTxt, "<T %s %i %s %s %s>", pch, state, t.hide, icon, t.title);
+          sprintf(printTxt, "<T %s %i %s %s %s>", pch, state, t.show, icon, t.title);
           Serial.print(String(strlen(printTxt)));
           Serial.println(printTxt);
           webSocket.sendTXT(num, printTxt);
@@ -352,7 +331,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         } else if (type == 'C') {// request for cab data
           int i = cOrder[id];
           cData c = ccc[i];
-          sprintf(printTxt, "<C %s %s %s %s>", pch, c.hide, c.icon0, c.title);
+          sprintf(printTxt, "<C %s %s %s %s>", pch, c.show, c.icon0, c.title);
           webSocket.sendTXT(num, printTxt);
 
         }
@@ -379,28 +358,24 @@ void powerOff(uint8_t num) {
   webSocket.sendTXT(num, printTxt);
 }
 
-void turnoutAction(int id, uint8_t num) {
-  //String idTxt;
-  int state;
-  char *icon;
-  // String stateTxt;
-  // String typeTxt;
+void turnoutAction(char *pch, int id, uint8_t num) {
   // Return specified output. id already re-ordered
   int i = tOrder[id];
   tData t = ttt[i];
-  state = t.zStatus;
-  state = abs(state-1);  // change state and save
-  t.zStatus = state;
-  // stateTxt = (state>0) ? "1" : "0";
-  icon = (state>0) ? t.icon1 : t.icon0;
-  // idTxt = String(t.id);
-  // typeTxt = String(t.type);
-  // Serial.println("<Z " + idTxt + " " + stateTxt + ">");  //  To Arduino
-  sprintf(printTxt, "<Z %i %i>", i, t.zStatus);
+  int state = t.zStatus;
+  char *icon;
+  if (state > 0) {
+    icon = t.icon0;
+    state = 0;
+  } else {
+    icon = t.icon1;
+    state = 1;
+  }
+  ttt[i].zStatus = state;
+  sprintf(printTxt, "<Z %i %i>", i, state);
   Serial.println(printTxt);
-  // sendText = "<Y " + typeTxt + idTxt + " " + stateTxt + " " + icon + ">"; // To device
-  // webSocket.sendTXT(num, sendText);
-  sprintf(printTxt, "<Y %s%i %i %s>", t.type, id, t.zStatus, icon);
+  pch++;
+  sprintf(printTxt, "<Y T%s %i %s>", pch, state, icon);
   webSocket.sendTXT(num, printTxt);
 
 }  // turnoutAction
@@ -411,100 +386,78 @@ void turnoutAction(int id, uint8_t num) {
 
 void sendSetUpData(uint8_t num, char *source) {  // for settings page
   char type = source[0];
-  char *pID = strtok(source, "TC");
+  // char *pID = strtok(source, "TC");
+  char *pID;
+  pID = source + 1;
   int dID;
-  sscanf(pID,"%i", &dID);
+  sscanf(pID,"%d", &dID);
   if (type == 'T') {
     int id = tOrder[dID];
     tData t = ttt[id];
-    // sendText = "<I "+String(source)+" "+data.hide+" "+data.icon0+" "+data.pin+" "+data.title+">";  // <I ID Hide Icon Title PinNo>
-    // webSocket.sendTXT(num, sendText);
-    sprintf(printTxt, "<I %s %s %s %s %s>", source, t.hide, t.icon0, t.pin, t.title);
+    sprintf(printTxt, "<I %s %s %s %s %s>", source, t.show, t.pin, t.icon0, t.title);
     webSocket.sendTXT(num, printTxt);
 
   } else if (type == 'C') {
     int id = cOrder[dID];
     cData c = ccc[id];
-    // sendText = "<I "+String(source)+" "+data.hide+" "+data.icon0+" "+ data.pin+" "+ data.title+">";  // <I ID Hide Icon Title PinNo>
-    // webSocket.sendTXT(num, sendText);
-    sprintf(printTxt, "<I %s %s %s %s %s>", source, c.hide, c.icon0, c.pin, c.title);
+    sprintf(printTxt, "<I %s %s %s %s %s>", source, c.show, c.pin, c.icon0, c.title);
     webSocket.sendTXT(num, printTxt);
 
   }
 }  // sendSetUpData
 
-void updateItemData(char *pch) {
-  char avant[15];
-  strncpy(avant, pch, 14);
-  char source[4], icon0[4], pin[4], hide[2];
-  sscanf(pch,"%s,%s,%s,%s", source, icon0, pin, hide);
-  char type = source[0];
+void saveItemData(uint8_t num, char *pch) {
+  pch += 2;
+  char toScan[15];
+  strncpy(toScan, pch, 14);
+  toScan[14] = '\0';
+  char source[4];
+  char icon0[5];
+  char pin[4];
+  char show[2];
+  Serial.println("toScan:" + String(toScan) + ":");
+  sscanf(toScan, "%s %s %s %s", source, show, pin, icon0);
+  Serial.println("source:" + String(source));
+  Serial.println("show:" + String(show));
+  Serial.println("pin:" + String(pin));
+  Serial.println("icon0:" + String(icon0) + ":");
+
+  const char type = source[0];
   char *cID;
   cID = source+1;
-  int id;
   int dID;
-  sscanf(cID, "%i", &dID);
-  char *title = 0;
-  title=pch+16;
-
-  /*
-  char type = pch[1]; // pch = " type(1)ID(2) icon0(3) pin(3) hide(1) title(1-15)"
-  // String pchS = String(pch);
-  // String idS = pchS.substring(2, 3);
-  // int id = idS.toInt();
-  char *cID;
-  sID = pch+2;
-  char *cID;
-  strncopy(temp, sID, 2);
-  int id;
-  sscanf(cID, "%d", &id);
-
-  char *cIcon0;
-  cIcon0 = pch+7;
-  char *cPin;
-  cPin = pch+9;
-  char *cHide;
-  cHide = pch+13;
+  sscanf(cID, "%d", &dID);
   char *title;
   title = pch+15;
-  */
-
+  Serial.println("title:" + String(title));
   if (type == 'T') {
-    //ttt[id].icon0 = pch.substring(5,7);
-    //ttt[id].pin = pch.substring(9,11);
-    //ttt[id].hide = pch.substring(13,13);
-    //ttt[id].title = pch.substring(15);
-    id = tOrder[dID];
+    int id = tOrder[dID];
     strcpy(ttt[id].icon0, icon0);
     strcpy(ttt[id].pin, pin);
-    strcpy(ttt[id].hide, hide);
+    strcpy(ttt[id].show, show);
     strcpy(ttt[id].title, title);
   } else if (type == 'C') {
-    //ccc[id].icon0 = pchS.substring(5,7);
-    //ccc[id].pin = pchS.substring(9,11);
-    //ccc[id].hide = pchS.substring(13,13);
-    //ccc[id].title = pchS.substring(15);
-    id = cOrder[dID];
+    int id = cOrder[dID];
     strcpy(ccc[id].icon0, icon0);
     strcpy(ccc[id].pin, pin);
-    strcpy(ccc[id].hide, hide);
+    strcpy(ccc[id].show, show);
     strcpy(ccc[id].title, title);
-
   }
-}  // updateItemData()
+  sprintf(printTxt, "<I %s %s %s %s %s>", source, show, pin, icon0, title);
+  webSocket.sendTXT(num, printTxt);
+
+}  // saveItemData()
 
 void moveItem(char *source, char *target) { //  Move cab or turnout location in table
   char sType = source[0];
   char tType = target[0];
-  if (sType == tType) {
-    char *psType = strtok(source, "TC");
-    char *ptType = strtok(target, "TC");
+  if (sType = tType) {
+    source++;
+    target++;
     int idSource;
     int idTarget;
-    sscanf(psType,"%i", &idSource);
-    sscanf(ptType,"%i", &idTarget);
-    // int idSource = atoi (psType);
-    // int idTarget = atoi (ptType);
+    sscanf(source,"%d", &idSource);
+    sscanf(target,"%d", &idTarget);
     if (sType == 'T') {
       moveTurnouts(idSource, idTarget);
     } else if (sType == 'C') {

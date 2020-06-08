@@ -5,6 +5,7 @@ var max = 15;
 var DID;  // Dragged ID
 var DIH;  // Dragged innerHTML
 var LDO;  // Last Dragged Over ID
+var LDH;  // Last Dragged Over innerHTML
 
 function showTurnouts() {
   max = 15;
@@ -52,17 +53,19 @@ function editItem(tID) {
 
 
 function dragStart( event ) {
-  event.dataTransfer.setData("text", event.target.innerHTML);
-  DID = LDO = event.target.id;
-  DIH = event.target.innerHTML;
-  event.target.style.opacity = .5;
+  var t = event.target;
+  event.dataTransfer.setData("text", t.innerHTML);
+  DID = LDO = t.id;
+  DIH = t.innerHTML;
+  t.style.opacity = .5;
   dropped = false;
   event.stopPropagation();
 }
 
 function dragEnd( event ) {
-  if ( event.target.className = "drag") {
-    event.target.style.opacity = "";
+  var t = event.target;
+  if ( t.className = "drag") {
+    t.style.opacity = "";
     // Reset innerHTML if dragged out of bounds
     if (dropped == false) {
       var DIDN = Number(DID.substr(1));
@@ -76,18 +79,18 @@ function dragEnd( event ) {
         if (LDON>0) {  // shift up
           for (x=max-1; x>DIDN-1; x--) {
           rows[x].innerHTML = rows[x-1].innerHTML;
+          rows[x].color = rows[x-1].color;
           }
         } else {  // shift down
           for (x=0; x<DIDN; x++) {
             rows[x].innerHTML = rows[x+1].innerHTML;
+            rows[x].color = rows[x+1].color;
           }
         }
         rows[DIDN].innerHTML = DIH;
       }
     } else {
-      var sourceTxt = event.dataTransfer.getData("text");
-      var targetTxt = event.target.id;
-      sendTxt = "<I "+sourceTxt+" "+targetTxt+">";
+      sendTxt = "<I "+DID+" "+LDO+">";
       connection.send(sendTxt);
     }
   }
@@ -95,6 +98,18 @@ function dragEnd( event ) {
 }
 
 /* events fired on the drop targets */
+function dragEnter( event ) {
+    // highlight potential drop target when the draggable element enters it
+    var t = event.target;
+    if ( t.className = "drag") {
+        t.style.background = "purple";
+        // document.getElementById(LDO).innerHTML = t.innerHTML;
+        LDH = t.innerHTML;
+        t.innerHTML = "- - -";
+      }
+      event.stopPropagation();
+}
+
 function dragOver( event ) {
   // prevent default to allow drop
   event.preventDefault();
@@ -102,21 +117,12 @@ function dragOver( event ) {
   event.stopPropagation();
 }
 
-function dragEnter( event ) {
-    // highlight potential drop target when the draggable element enters it
-    var t = event.target;
-    if ( t.className = "drag") {
-        t.style.background = "purple";
-        document.getElementById(LDO).innerHTML = t.innerHTML;
-        t.innerHTML = "-";
-      }
-      event.stopPropagation();
-}
-
 function dragLeave( event ) {
     // reset background of potential drop target when the draggable element leaves it
-  if ( event.target.className == "drag" ) {
-    event.target.style.background = "";
+  var t = event.target;
+  if ( t.className == "drag" ) {
+    t.style.background = "";
+    t.innerHTML = LDH;
   }
   event.stopPropagation();
 }
@@ -127,23 +133,22 @@ function drop( event ) {
   var t = event.target;
   if ( t.className == "drag" ) {
     t.style.background = "";
-    t.innerHTML=event.dataTransfer.getData("text");
+    t.innerHTML = event.dataTransfer.getData("text");
     dropped = true;
   }
   event.stopPropagation();
 }
 
 // Modal section
-var test;
 var modal = document.getElementById("myModal");
-var editItemID;
 
 function saveEdit() {
   var icon = document.getElementById("lIcon").value;
   var pin = document.getElementById("pin").value;
-  var hide = document.getElementById("hideBtn").value;
+  var checked = document.getElementById("showBtn").checked;
+  var show = checked ? 0 : 1;
   var title = document.getElementById("title").value;
-  sendTxt = "<I "+DID+" "+icon+" "+pin+" "+hide+" "+title+">";
+  sendTxt = "<K "+DID+" "+show+" "+pin+" "+icon+" "+title+">";
   connection.send(sendTxt);
   modal.style.display = "none";
 }
@@ -164,17 +169,24 @@ function onMessage(event) {
   var last = messageTxt.lastIndexOf(">");
   var com = messageTxt.substr(1,last-1);
   var com1 = com.substr(0,1);
+  var pin = com.substr(8,3);
   if (com1 == "I") {
-    DID = com.substr(2,5);
-    if (modal.display === "none") {
-      var element = document.getElementById(DID);
-      element.hidden = com.substr(6,7);
-      element.innerHTML = com.substr(8);
+    // DID = com.substr(2,3);
+    if (modal.style.display === "block") {
+      document.getElementById("showBtn").checked = Number(com.substr(6,1));
+      document.getElementById("pin").value = pin;
+      document.getElementById("lIcon").value = com.substr(12,2);
+      document.getElementById("title").value = com.substr(15);
     } else {
-      document.getElementById("hideBtn").hidden = com.substr(6,7);
-      document.getElementById("icon").innerHTML = com.substr(8,9);
-      document.getElementById("pin").innerHTML = com.substr(10,14);
-      document.getElementById("title").innerHTML = com.substr(14);
+      var tID = com.substr(2,3);
+      var element = document.getElementById(tID);
+      var show = Number(com.substr(6,1));
+      if (show<1) {
+        pin = "👁️  " + pin + "  ";
+      } else {
+        pin = "💤  " + pin + "  ";
+      }
+      element.innerHTML = pin + com.substr(12);
     }
   }
 }

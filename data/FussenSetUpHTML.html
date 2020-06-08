@@ -61,7 +61,6 @@
       <div class="modal-content">
         <div class="close">
           <a class="btnL" data-dismiss="modal">↩️</a>
-          <a class="btnL" data-dismiss="modal">&times;</a>
           <a class="btnR" onClick="saveEdit()">💾</a>
         </div>
         <div class="modal-body">
@@ -94,8 +93,9 @@
               <input type"pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
               <br><label for="pin" class="note">(1-999)</label><br><br>
 
-              <input type="checkbox" id="hideBtn" name"hidden" value="0"></input>
-              <label for="hideBtn">Hidden</label>
+              <label for="showBtn">👁️  </label>
+              <input type="checkbox" id="showBtn"></input>
+              <label for="showBtn"> Show</label>
             </div>
           </form>
         </div>
