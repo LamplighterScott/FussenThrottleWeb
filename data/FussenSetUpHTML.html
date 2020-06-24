@@ -1,107 +1,132 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
-<link rel="stylesheet" href="FussenSetUpCSS.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="FussenSetUpCSS.css">
 </head>
-<script language="javascript" type="text/javascript" src="FussenSetUpJS.js" defer></script>
+<script language="javascript" type="text/javascript" src="FussenSetUpJS.js"></script>
 <!-- script src="FussenSetUpDeferJS.js" defer></script -->
 
-<body>
-  <div id="tHide">
-    <uL>
-      <div id="turnouts">
-    		<div class="drag" id="T00">TO 0</div>
-    		<div class="drag" id="T01">TO 1</div>
-    		<div class="drag" id="T02">TO 2</div>
-    		<div class="drag" id="T03">TO 3</div>
-    		<div class="drag" id="T04">TO 4</div>
-    		<div class="drag" id="T05">TO 5</div>
-        <div class="drag" id="T06">TO 6</div>
-    		<div class="drag" id="T07">TO 7</div>
-    		<div class="drag" id="T08">TO 8</div>
-    		<div class="drag" id="T09">TO 9</div>
-    		<div class="drag" id="T10">TO 10</div>
-    		<div class="drag" id="T11">TO 11</div>
-        <div class="drag" id="T12">TO 12</div>
-    		<div class="drag" id="T13">TO 13</div>
-    		<div class="drag" id="T14">TO 14</div>
-      </div>
-    </uL>
-  </div>
-  <div id="cHide" hidden>
-    <ul>
-      <div id="cabs">
-    		<div class="drag" id="C00">Cab 0</div>
-    		<div class="drag" id="C01">Cab 1</div>
-    		<div class="drag" id="C02">Cab 2</div>
-    		<div class="drag" id="C03">Cab 3</div>
-    		<div class="drag" id="C04">Cab 4</div>
-    		<div class="drag" id="C05">Cab 5</div>
-        <div class="drag" id="C06">Cab 6</div>
-        <div class="drag" id="C07">Cab 7</div>
-        <div class="drag" id="C08">Cab 8</div>
-        <div class="drag" id="C09">Cab 9</div>
-      </div>
-    </ul>
-  </div>
-
-  <footer class="btn-group">
-    <button onClick="showTurnouts()" type="button" id="btn-TOs" disabled>🛤️</button>
-    <button onClick="showCabs()" type="button" id="btn-cabs">🚂</button>
-    <button onClick="location.href='/';" type="button">📲</button>
-  </footer>
-
-  <!-- Modal -->
-  <div id="myModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-
-      <!-- Modal content-->
-      <div class="modal-content">
-        <div class="close">
-          <a class="btnL" data-dismiss="modal">↩️</a>
-          <a class="btnR" onClick="saveEdit()">💾</a>
-        </div>
-        <div class="modal-body">
-          <br><br>
-
-          <form action="/cabEdit" type="text">
-            <div style="text-align:center;font-size:18px;">
-              <input list="icons" id="lIcon" name="cabIcon" size="3" style="font-size:24px;">
-              <datalist id="icons">
-                <option value="🚂">
-                <option value="🚃">
-                <option value="🚋">
-                <option value="🚊">
-                <option value="🚄">
-                <option value="🚅">
-                <option value="🚞">
-                <option value="🚅">
-                <option value="🚇">
-                <option value="🚅">
-                <option value="🚝">
-                <option value="🚈">
-                <option value="🛺">
-              </datalist><br><br>
-
-              <label for="title">Cab Title</label><br>
-              <input type="text" pattern="[^<>]{15}" id="title" name="title" size="16" default="indéterminé" class="textInput">
-              <br><label for="title" class="note">(15 characters max)</label><br><br>
-
-              <label for="pin">DCC Encoded Cab Number</label><br>
-              <input type"pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
-              <br><label for="pin" class="note">(1-999)</label><br><br>
-
-              <label for="showBtn">👁️  </label>
-              <input type="checkbox" id="showBtn"></input>
-              <label for="showBtn"> Show</label>
+<body onload="initElements()">
+    <div id="tHide">
+        <uL>
+            <div id="turnouts">
+                <div class="drag" id="T00">TO 0</div>
+                <div class="drag" id="T01">TO 1</div>
+                <div class="drag" id="T02">TO 2</div>
+                <div class="drag" id="T03">TO 3</div>
+                <div class="drag" id="T04">TO 4</div>
+                <div class="drag" id="T05">TO 5</div>
+                <div class="drag" id="T06">TO 6</div>
+                <div class="drag" id="T07">TO 7</div>
+                <div class="drag" id="T08">TO 8</div>
+                <div class="drag" id="T09">TO 9</div>
+                <div class="drag" id="T10">TO 10</div>
+                <div class="drag" id="T11">TO 11</div>
+                <div class="drag" id="T12">TO 12</div>
+                <div class="drag" id="T13">TO 13</div>
+                <div class="drag" id="T14">TO 14</div>
             </div>
-          </form>
-        </div>
-      </div>
+        </uL>
     </div>
-  </div>
-</body>
+    <div id="cHide" hidden>
+        <ul>
+            <div id="cabs">
+                <div class="drag" id="C00">Cab 0</div>
+                <div class="drag" id="C01">Cab 1</div>
+                <div class="drag" id="C02">Cab 2</div>
+                <div class="drag" id="C03">Cab 3</div>
+                <div class="drag" id="C04">Cab 4</div>
+                <div class="drag" id="C05">Cab 5</div>
+                <div class="drag" id="C06">Cab 6</div>
+                <div class="drag" id="C07">Cab 7</div>
+                <div class="drag" id="C08">Cab 8</div>
+                <div class="drag" id="C09">Cab 9</div>
+            </div>
+        </ul>
+    </div>
+
+    <footer class="btn-group">
+        <button onClick="showTurnouts()" type="button" id="btn-TOs" disabled>🛤️</button>
+        <button onClick="showCabs()" type="button " id="btn-cabs">🚂</button>
+        <button onClick="location.href='/';" type="button">📲</button>
+    </footer>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+
+                <a id="btnL" class="btnL" onClick="showLine(this)">👁️</a>
+                <a class="btnR" onClick="saveEdit()">💾</a>
+
+
+                <div class="dropdown">
+                    <button id="iconBtn" onClick="showIcons()" class="dropbtn">Icon</button>
+                    <div id="iconDropS" class="dropdown-content">
+                        <a id="S00">⬆️↗️</a>
+                        <a id="S01">↖️⬆️</a>
+                        <a id="S02">🔀🔁</a>
+                        <a id="S03">🚦🚥</a>
+                        <a id="S04">🧲</a>
+                        <a id="S05">1️⃣2️⃣</a>
+                        <a id="S06">⬆️⬇️</a>
+                        <a id="S07">↕️</a>
+                        <a id="S08">↔️</a>
+                        <a id="S09">🏰</a>
+                        <a id="S10">🔦</a>
+                        <a id="S11">⚙️</a>
+                        <a id="S12">🏭</a>
+                        <a id="S13">⛪</a>
+                        <a id="S14">🌆</a>
+                        <a id="S15">🕰️</a>
+                        <a id="S16">🔔</a>
+                        <a id="S17">🔄</a>
+                        <a id="S18">🛤️</a>
+                        <a id="S19">🇮🇳</a>
+                        <a id="S20"></a>
+                        <a id="S21">🚨</a>
+                        <a id="S22">🛠️</a>
+                    </div>
+                    <div id="iconDropB" class="dropdown-content">
+                        <a>🚂</a>
+                        <a>🚃</a>
+                        <a>🚋</a>
+                        <a>🚊</a>
+                        <a>🚄</a>
+                        <a>🚅</a>
+                        <a>🚝</a>
+                        <a>🚈</a>
+                        <a>🛺</a>
+                        <a>🚇</a>
+                        <a>🚒</a>
+                        <a>⛴️</a>
+                        <a>🌞</a>
+                    </div>
+                </div>
+                <br><br>
+                <form id="typeGrp">
+                    <label for="typeChoice">Behaviour</label><br>
+                    <input id="T" type="radio" name="typeChoice" value="T"><label> On-20ms-Off-Switch</label><br>
+                    <input id="C" type="radio" name="typeChoice" value="C"><label> On-20ms-Off</label><br>
+                    <input id="L" type="radio" name="typeChoice" value="L"><label> On/off</label><br>
+                    <br>
+                </form>
+
+                <label id="tTitle" for="title">Name</label><br>
+                <input type="text" pattern="[^<>]{15}" id="title" name="title" size="16" default="indéterminé" class="textInput">
+                <br><label for="title" class="note">(15 characters max)</label><br><br>
+
+                <label id="pinTitle" for="pin">Pin</label><br>
+                <input type="pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
+                <br><label for="pin" class="note">(1-999)</label><br><br>
+            </div>
+        </div>
+    </div>
+</body onload="initElements()>
 
 </html>

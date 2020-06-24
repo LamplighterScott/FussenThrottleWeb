@@ -6,49 +6,48 @@ var clicked = 0;
 var sendText = "";
 
 function initElements() {
-  var tElement = document.getElementById("turns");
-  var tRows = tElement.querySelectorAll("*");
-  var cElement = document.getElementById("myDropdown");
-  var cRows = cElement.querySelectorAll("*");
-  var fElement = document.getElementById("fLoco");
-  var fRows = fElement.querySelectorAll("*");
-  var pElement = document.getElementById("pSounds");
-  var pRows = pElement.querySelectorAll("*");
+  setTimeout(function() {
+    const tElement = document.getElementById("turns");
+    const tRows = tElement.querySelectorAll("*");
+    const cElement = document.getElementById("myDropdown");
+    const cRows = cElement.querySelectorAll("*");
+    const fElement = document.getElementById("fLoco");
+    const fRows = fElement.querySelectorAll("*");
+    const pElement = document.getElementById("pSounds");
+    const pRows = pElement.querySelectorAll("*");
 
-  tRows.forEach(function(item){
-    item.addEventListener("click", function() {
-      setZ(item.id);
+    tRows.forEach(function(item){
+      item.addEventListener("click", function() {
+        setZ(item.id);
+      });
+      getInner(item);
     });
-    getInner(item);
-  });
 
-  cRows.forEach(function(item){
-    item.addEventListener("click", function() {
-      selectLoco(item.id);
+    cRows.forEach(function(item){
+      item.addEventListener("click", function() {
+        selectLoco(item.id);
+      });
+      getInner(item);
     });
-    getInner(item);
-  });
 
-  fRows.forEach(function(item){
-    item.addEventListener("click", function() {
-      setZ(item.id);
+    fRows.forEach(function(item){
+      item.addEventListener("click", function() {
+        setZ(item.id);
+      });
     });
-  });
 
-  pRows.forEach(function(item){
-    item.addEventListener("click", function() {
-      setZ(item.id);
+    pRows.forEach(function(item){
+      item.addEventListener("click", function() {
+        setZ(item.id);
+      });
     });
-  });
-
+  }, 200);
 }
 
 function getInner(item) {
-  setTimeout(function() {
-    var tID = item.id;
+    const tID = item.id;
     sendText = "<Z " + tID + ">";
     connection.send(sendText);
-  }, 200);
 }
 
 function selectLoco(fID) {
@@ -70,8 +69,8 @@ function showLocos() {
 // Close the dropdown if the user clicks outside of it
 window.onclick = function(event) {
   if (!event.target.matches('.dropbtn')) {
-    var dropdowns = document.getElementsByClassName("dropdown-content");
-    var i;
+    const dropdowns = document.getElementsByClassName("dropdown-content");
+    let i;
     for (i = 0; i < dropdowns.length; i++) {
       var openDropdown = dropdowns[i];
       if (openDropdown.classList.contains('show')) {
@@ -84,7 +83,7 @@ window.onclick = function(event) {
 function setZ(tID) {
   if (power>0) {
     writeToScreen(tID);
-    var com = tID[0];
+    const com = tID[0];
     if (com == "F" ) {
       if (curLoco != "None") {
         sendText = "<" + tID + ">";
@@ -174,15 +173,15 @@ function sendSpeed(param) {
     speed = 0;
   }
   if (curLoco != "None") {
-    var directionTxt = direction.toString();
-    var speedTxt = speed.toString();
+    const directionTxt = direction.toString();
+    const speedTxt = speed.toString();
     sendText = "<t " + curLoco + " " + speedTxt + " " + directionTxt + ">";
     connection.send(sendText);
   }
 }
 
 function writeToScreen(message) {
-  var output = document.getElementById("output");
+  const output = document.getElementById("output");
   message = "--" + message;
   output.innerHTML+= message;
 }
@@ -192,12 +191,11 @@ function setCharAt(str,index,chr) {
     return str.substr(0,index) + chr + str.substr(index+1);
 }
 
-
 function onMessage(event) {
-  var messageTxt = event.data;
-  var last = messageTxt.lastIndexOf(">");
-  var com = messageTxt.substr(1,last-1);
-  var com1 = com.substr(0,1);
+  const messageTxt = event.data;
+  const last = messageTxt.lastIndexOf(">");
+  const com = messageTxt.substr(1,last-1);
+  const com1 = com.substr(0,1);
   switch (com1) {
     case "0": {
       power = 0;
@@ -210,11 +208,11 @@ function onMessage(event) {
       break;
     }
     case "t": {
-      var tArray = com.split(" ");
-      var rCabTxt = tArray[1];
+      const tArray = com.split(" ");
+      const rCabTxt = tArray[1];
       if (rCabTxt == curLoco) {
-        var rSpeedTxt = tArray[2];
-        var rDirectionTxt = tArray[3];
+        const rSpeedTxt = tArray[2];
+        const rDirectionTxt = tArray[3];
         speed = Number(rSpeedTxt);
         direction = Number(rDirectionTxt);
         if (speed<0) {
@@ -224,23 +222,23 @@ function onMessage(event) {
             speed = -speed;
           }
         }
-        var slider = document.getElementById("speedSlider");
+        const slider = document.getElementById("speedSlider");
         slider.value = speed;
       }
       break;
     }
     case "Y": {
-      var zArray = com.split(" ");
-      var rID = zArray[1];
-      var element = document.getElementById(rID);
-      var rStateTxt = zArray[2];
-      var state = Number(rStateTxt);
-      var rIcon = zArray[3];
-      var innerTxt = element.innerHTML;
-      var innerArray = Array.from(innerTxt);
+      const zArray = com.split(" ");
+      const rID = zArray[1];
+      const element = document.getElementById(rID);
+      const rStateTxt = zArray[2];
+      const state = Number(rStateTxt);
+      const rIcon = zArray[3];
+      const innerTxt = element.innerHTML;
+      let innerArray = Array.from(innerTxt);
       innerArray[0] = rIcon;
       element.innerHTML = innerArray.join("");
-      var textColor = "color:green";
+      let textColor = "color:green";
       if (state>0) {
         textColor = "color:red";
       }
@@ -248,41 +246,41 @@ function onMessage(event) {
       break;
     }
     case "T": {
-      var avant = com.substr(2,7);
-      var zArray = avant.split(" ");
-      var rID = zArray[0];
-      var rStateTxt = zArray[1];
-      var state = Number(rStateTxt);
-      var hide = Number(zArray[2]);
-      var iconTitle = com.substr(10);
-      var element = document.getElementById(rID);
+      const avant = com.substr(2,7);
+      const zArray = avant.split(" ");
+      const rID = zArray[0];
+      const rStateTxt = zArray[1];
+      const state = Number(rStateTxt);
+      const show = Number(zArray[2]);
+      const iconTitle = com.substr(10);
+      const element = document.getElementById(rID);
       element.innerHTML = iconTitle;
-      var textColor = "color:green";
+      let textColor = "color:green";
       if (state>0) {
         textColor = "color:red";
       }
       element.style = textColor;
-      if (hide>0) {
-        //element.setAttribute("hidden", "false");
-        element.style.display = "none";
+      if (show>0) {
+        element.removeAttribute("hidden");
       } else {
-        //element.removeAttribute("hidden");
-        element.style.display = "block";
+        element.setAttribute("hidden", "false");
       }
       break;
     }
     case "C": {
-      var avant = com.substr(2,5);
-      var zArray = avant.split(" ");
-      var rID = zArray[0];
-      var hide = Number(zArray[1]);
-      var iconTitle = com.substr(8);
-      var element = document.getElementById(rID);
+      const avant = com.substr(2,5);
+      const zArray = avant.split(" ");
+      const rID = zArray[0];
+      const show = Number(zArray[1]);
+      const iconTitle = com.substr(8);
+      const element = document.getElementById(rID);
       element.innerHTML = iconTitle;
-      if (hide>0) {
-        element.setAttribute("hidden", "false");
+      if (show>0) {
+        // element.removeAttribute("hidden");
+        element.style.display = "block";
       } else {
-        element.removeAttribute("hidden");
+        //element.setAttribute("hidden", "false");
+        element.style.display = "none";
       }
       break;
     }

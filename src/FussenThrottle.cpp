@@ -11,6 +11,7 @@
 #include <FS.h> // LittleFS / SPIFFS Library
 #include <DNSServer.h>
 #include <WebSocketsServer.h>
+#include <Arduino.h>
 
 // #include <ArduinoOTA.h> // OTA update
 
@@ -25,24 +26,24 @@ typedef struct {
   char pin[4];  // Arduino GPIO number
   char title[16];  // any string for name of output
   char type[2];  // T = turnout/semaphore, C = decoupler, L = Light
-  char icon0[5];  // icons for state 0 (closed) and 1 (thrown)
-  char icon1[5];
+  char icon0[8];  // icons for state 0 (closed) and 1 (thrown)
+  char icon1[8];
   int iFlag;  // See DCC++ Outlets for bits explanation, WiThrottle uses bits 3-6 to communicate output type to DCC++ in Load Outputs
               // T=8, C=16, F=32, L=64
   int zStatus;  // 0 = closed (straight, green, off, 0(DCC++)), 1 = thrown (round, diverge, red, on, 1(DCC++))
   int present;  // 0 = not present, 1 = present in DCC++
-  char show[2]; // =1 if not to be displayed in throttle control screen
+  char show[2]; // = 0 if not to be displayed in throttle control screen, 1 = show
 } tData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 tData ttt[]= {
-  {0, "022", "To outer", "T", "\U00002B06", "\U00002196", 8, 0, 0, "0"},
-  {1, "024", "To inner", "T", "\U00002B06", "\U00002197", 8, 0, 0, "0"},
-  {2, "026", "Yard 1", "T", "\U00002B06", "\U00002196", 8, 0, 0, "0"},
-  {3, "028", "Yard 1-1", "T", "\U00002B06", "\U00002197", 8, 0, 0, "0"},
-  {4, "030", "Outer to Cross", "T", "\U00002B06", "\U00002196", 8, 0, 0, "0"},
-  {5, "032", "Cross to Yard 2", "T", "\U0001F500", "\U0001F504", 8, 0, 0, "0"},
-  {6, "034", "Yard 2-2", "T", "\U00002B06", "\U00002197", 8, 0, 0, "0"},
-  {7, "036", "Sidetrack", "T", "\U00002B06", "\U00002197", 8, 0, 0, "0"},
+  {0, "022", "To outer", "T", "\U00002B06\U0000FE0F", "\U00002196\U0000FE0F", 8, 0, 0, "1"},
+  {1, "024", "To inner", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "1"},
+  {2, "026", "Yard 1", "T", "\U00002B06\U0000FE0F", "\U00002196\U0000FE0F", 8, 0, 0, "1"},
+  {3, "028", "Yard 1-1", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "1"},
+  {4, "030", "Outer to Cross", "T", "\U00002B06\U0000FE0F", "\U00002196\U0000FE0F", 8, 0, 0, "1"},
+  {5, "032", "Cross to Yard 2", "T", "\U0001F500", "\U0001F504", 8, 0, 0, "1"},
+  {6, "034", "Yard 2-2", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "1"},
+  {7, "036", "Sidetrack", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "0"},
   {8, "038", "Decoupler 1A", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
   {9, "040", "Decoupler 1B", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
   {10, "042", "Decoupler 2A", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
@@ -62,12 +63,12 @@ typedef struct {
 } cData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 cData ccc[]= {
-  {0, "111", "SBB 111", "\U0001F682", "0"},
-  {1, "003", "DB 112", "\U0001F683", "0"},
-  {2, "046", "CFF FFS123", "\U0001F682", "0"},
-  {3, "003", "DB 239", "\U0001F686", "0"},
-  {4, "000", "Steam", "\U0001F682", "1"},
-  {5, "000", "Bullet", "\U0001F685", "1"},
+  {0, "111", "SBB 111", "\U0001F682", "1"},
+  {1, "003", "DB 112", "\U0001F683", "1"},
+  {2, "046", "CFF FFS123", "\U0001F682", "1"},
+  {3, "003", "DB 239", "\U0001F686", "1"},
+  {4, "000", "Steam", "\U0001F682", "0"},
+  {5, "000", "Bullet", "\U0001F685", "0"},
   {6, "000", "Monorail", "\U0001F69D", "1"},
   {7, "000", "Mountain", "\U0001F69E", "1"},
   {8, "000", "Trolley", "\U0001F68E", "1"},
@@ -81,6 +82,28 @@ int LocoState[10][7]={{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0
 int locoNumber = 0;  // global variable for current target loco number
 char printTxt[40];  // buffer for creating communication cstrings
 
+void startWiFi();
+void startFS();
+void startWebSocket();
+void startMDNS();
+void startServer();
+void handleRoot();
+void handleSetup();
+bool handleFileRead(String path);
+void handle_CaptivePortal();
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
+void powerOff(uint8_t num);
+void turnoutAction(char *pch, int id, uint8_t num);
+void sendSetUpData(uint8_t num, char *pch, char *source);
+void saveItemData(char *pch);
+void saveTitle(char *pch);
+void moveItem(char *source, char *target);
+void moveTurnouts (int idSource, int idTarget);
+void moveCabs (int idSource, int idTarget);
+void loadOutputs();
+void retrieveSettings();
+int invert(int value);
+String getContentType(String filename);
 
 //==============================================================
 //                  SETUP
@@ -94,7 +117,7 @@ void setup(void){
   // Serial.setDebugOutput(true);
 
   startWiFi();
-  startSPIFFS();
+  startFS();
   startWebSocket();
   startMDNS();
   startServer();
@@ -102,7 +125,7 @@ void setup(void){
   loadOutputs();  // register outputs with Arduino
   // delay(1000);
   // Serial.println("<J 3>"); // play first sound after loadling switches
-
+  retrieveSettings();
 }
 
 //==============================================================
@@ -128,7 +151,7 @@ void startWiFi() {
   // Serial.println("USP Server started");
 }
 
-void startSPIFFS() {
+void startFS() {
   SPIFFS.begin();                             // Start the SPI Flash File System (SPIFFS)
   //Serial.println("SPIFFS started. Contents:"); {
     Dir dir = SPIFFS.openDir("/");
@@ -227,7 +250,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       break;
     }
     case WStype_TEXT: {                     // if new text data is received - command from control device processor
-      Serial.printf("[%u] get Text: %s\n", num, payload);
+      // Serial.printf("[%u] get Text: %s\n", num, payload);
       char *pch = strtok((char *)payload,"<>");
 
       //const char payloadCommand = (const char) payload[1];
@@ -241,11 +264,20 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         Serial.println(on);
         webSocket.sendTXT(num, on);
 
+      } else if (payloadCommand == 'C') {   // used for getting loco status when changing locos
+        // Send speed and direction for all throttles
+        pch++;
+        int lN;
+        if (sscanf(pch,"%d", &lN)==1) {
+          locoNumber = cOrder[lN];
+          sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
+          webSocket.sendTXT(num, printTxt);
+        }
+
       }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
         int fKey;
-        //pch = strtok((char *)payload,"F");
         pch++;
-        if (sscanf(pch,"%d %d", &fKey)==1) {
+        if (sscanf(pch,"%d", &fKey)==1) {
           LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
           int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
           if (locoNumber < totalLocos) {
@@ -255,29 +287,21 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           }
         }
 
-      } else if (payloadCommand == 'I') {  // settings: set-up, move and edit
-        pch += 2;  // skip ove "I "
+      } else if (payloadCommand == 'I' || payloadCommand == 'M') {  // settings: set-up, move and edit
         char source[4];
         char target[4]; // also icon
-        int x = sscanf(pch,"%s %s", source, target);
+        int x = sscanf(pch+2,"%s %s", source, target);
         if (x == 1) {
-          sendSetUpData(num, source);
+          sendSetUpData(num, pch, source);
         } else if (x == 2) {
           moveItem(source, target);
         }
 
       } else if (payloadCommand == 'K') {
-          saveItemData(num, pch);  // Updates ESP array
+        saveItemData(pch);  // Updates ESP array less title
 
-      } else if (payloadCommand == 'C') {   // used for getting loco status when changing locos
-          // Send speed and direction for all throttles
-          pch++;
-          int lN;
-          if (sscanf(pch,"%d", &lN)==1) {
-            locoNumber = cOrder[lN];
-            sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
-            webSocket.sendTXT(num, printTxt);
-          }
+      } else if (payloadCommand == 'L') {
+        saveTitle(pch);  // Updates ESP array for title
 
       } else if (payloadCommand == 't') {             // Direction: reverse(0), forward(1); Speed: eStop(<0), 0-126
         // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
@@ -384,7 +408,62 @@ void turnoutAction(char *pch, int id, uint8_t num) {
  // Settings Functions  //
 /////////////////////////
 
-void sendSetUpData(uint8_t num, char *source) {  // for settings page
+void retrieveSettings() {
+  char path[4];
+  for (tData t: ttt) {
+    sprintf(path, "/T%d", t.id);
+    if (SPIFFS.exists(path)) {
+      File file = SPIFFS.open(path, "r");
+      file.read((byte *)&t, sizeof(t));
+      file.close();
+    }
+  }
+  for (cData c: ccc) {
+    sprintf(path, "/C%d", c.id);
+    if (SPIFFS.exists(path)) {
+      File file = SPIFFS.open(path, "r");
+      file.read((byte *)&c, sizeof(c));
+      file.close();
+    }
+  }
+
+  char tPath[] = "/tOrder";
+  if (SPIFFS.exists(tPath)) {
+    File file = SPIFFS.open(tPath, "r");
+    file.read((byte *)tOrder, sizeof(tOrder));
+    file.close();
+  }
+
+  char cPath[] = "/cOrder";
+  if (SPIFFS.exists(cPath)) {
+    File file = SPIFFS.open(cPath, "r");
+    file.read((byte *)cOrder, sizeof(cOrder));
+    file.close();
+  }
+
+  /*
+  while(f.available() && xCnt < 100) {
+        //Lets read line by line from the file
+        String line = f.readStringUntil('\n');
+        datArray[xCnt] = line.toInt();
+        Serial.print(xCnt);
+        Serial.print("  ");
+        Serial.println(line);
+        xCnt ++;
+      }
+
+    File f = SPIFFS.open("/data.txt", "w");
+
+    for (int i = 0; i < 100; i++) {
+      f.println(datArray[i]);
+    }
+    f.close();
+    */
+
+}  // retrieveSettings
+
+void sendSetUpData(uint8_t num, char *pch, char *source) {  // for settings page
+  char callCode = pch[0];
   char type = source[0];
   // char *pID = strtok(source, "TC");
   char *pID;
@@ -394,64 +473,121 @@ void sendSetUpData(uint8_t num, char *source) {  // for settings page
   if (type == 'T') {
     int id = tOrder[dID];
     tData t = ttt[id];
-    sprintf(printTxt, "<I %s %s %s %s %s>", source, t.show, t.pin, t.icon0, t.title);
+    if (t.type[0] == 'T') {
+      if (callCode == 'M') {
+        sprintf(printTxt, "<K %s %s %s%s %s>", t.show, t.pin, t.icon0, t.icon1, t.type);
+        webSocket.sendTXT(num, printTxt);
+        sprintf(printTxt, "<L %s>", t.title);
+      } else {
+        sprintf(printTxt, "<I %s %s %s %s%s %s>", source, t.show, t.pin, t.icon0, t.icon1, t.title);
+      }
+    } else {
+        if (callCode == 'M') {
+          sprintf(printTxt, "<K %s %s %s %s>", t.show, t.pin, t.icon0, t.type);
+          webSocket.sendTXT(num, printTxt);
+          sprintf(printTxt, "<L %s>", t.title);
+        } else {
+          sprintf(printTxt, "<I %s %s %s %s %s>", source, t.show, t.pin, t.icon0, t.title);
+        }
+    }
     webSocket.sendTXT(num, printTxt);
 
   } else if (type == 'C') {
     int id = cOrder[dID];
     cData c = ccc[id];
-    sprintf(printTxt, "<I %s %s %s %s %s>", source, c.show, c.pin, c.icon0, c.title);
-    webSocket.sendTXT(num, printTxt);
+      if (callCode == 'M') {
+        sprintf(printTxt, "<K %s %s %s>", c.show, c.pin, c.icon0);
+        webSocket.sendTXT(num, printTxt);
+        sprintf(printTxt, "<L %s>", c.title);
+      } else {
+        sprintf(printTxt, "<I %s %s %s %s %s>", source, c.show, c.pin, c.icon0, c.title);
+      }
+      webSocket.sendTXT(num, printTxt);
 
   }
 }  // sendSetUpData
 
-void saveItemData(uint8_t num, char *pch) {
-  pch += 2;
-  char toScan[15];
-  strncpy(toScan, pch, 14);
-  toScan[14] = '\0';
+void saveItemData(char *pch) {  // from settings page, modal edit
   char source[4];
-  char icon0[5];
+  char icon0[8];
+  char icon1[8];
+  char tType[2];
   char pin[4];
   char show[2];
-  Serial.println("toScan:" + String(toScan) + ":");
-  sscanf(toScan, "%s %s %s %s", source, show, pin, icon0);
-  Serial.println("source:" + String(source));
-  Serial.println("show:" + String(show));
-  Serial.println("pin:" + String(pin));
-  Serial.println("icon0:" + String(icon0) + ":");
+  if (sscanf(pch+2, "%s %s %s %s %s %s", source, show, tType, pin, icon0, icon1) > 4) {
+    const char type = source[0];
+    char *cID;
+    cID = source+1;
+    int dID;
+    sscanf(cID, "%d", &dID);
+    if (type == 'T') {
+      int id = tOrder[dID];
+      strcpy(ttt[id].icon0, icon0);
+      strcpy(ttt[id].icon1, icon1);
+      strcpy(ttt[id].type, tType);
+      strcpy(ttt[id].pin, pin);
+      strcpy(ttt[id].show, show);
+    } else if (type == 'C') {
+      int id = cOrder[dID];
+      strcpy(ccc[id].icon0, icon0);
+      strcpy(ccc[id].pin, pin);
+      strcpy(ccc[id].show, show);
+    }
+  }
+} // saveItemData()
 
-  const char type = source[0];
-  char *cID;
-  cID = source+1;
+void saveTitle(char *pch) {  // from settings page, modal edit
+  
+  const char type = pch[2];
+  char cID[3];
+  strncpy(cID, pch+3, 2);
+  cID[2] = '\0';
   int dID;
   sscanf(cID, "%d", &dID);
-  char *title;
-  title = pch+15;
-  Serial.println("title:" + String(title));
+
+  char title[16];
+  // title = pch+6;
+  strncpy(title, pch+6, 15);
+  title[15] = '\0';
+
   if (type == 'T') {
     int id = tOrder[dID];
-    strcpy(ttt[id].icon0, icon0);
-    strcpy(ttt[id].pin, pin);
-    strcpy(ttt[id].show, show);
-    strcpy(ttt[id].title, title);
+    tData t = ttt[id];
+    strcpy(t.title, title);
+
+    char path[] = "/tOrder";
+    sprintf(path, "/T%d", t.id);
+    //if (SPIFFS.exists(path)) {
+      File file = SPIFFS.open(path, "w");
+      file.write((byte *)&t, sizeof(t));
+      file.close();
+    // }
+
   } else if (type == 'C') {
     int id = cOrder[dID];
-    strcpy(ccc[id].icon0, icon0);
-    strcpy(ccc[id].pin, pin);
-    strcpy(ccc[id].show, show);
-    strcpy(ccc[id].title, title);
-  }
-  sprintf(printTxt, "<I %s %s %s %s %s>", source, show, pin, icon0, title);
-  webSocket.sendTXT(num, printTxt);
+    cData c = ccc[id];
+    strcpy(c.title, title);
 
-}  // saveItemData()
+    char path[] = "/tOrder";
+    sprintf(path, "/C%d", c.id);
+    // if (SPIFFS.exists(path)) {
+      File file = SPIFFS.open(path, "w");
+      file.write((byte *)&c, sizeof(c));
+      file.close();
+    // }
+    
+  }
+
+
+
+
+
+}  // saveTitle()
 
 void moveItem(char *source, char *target) { //  Move cab or turnout location in table
   char sType = source[0];
   char tType = target[0];
-  if (sType = tType) {
+  if (sType == tType) {
     source++;
     target++;
     int idSource;
@@ -478,37 +614,16 @@ void moveTurnouts (int idSource, int idTarget) {
     }
   }
   tOrder[idTarget] = transferID;
+
+  char path[] = "/tOrder";
+  if (SPIFFS.exists(path)) {
+      File file = SPIFFS.open(path, "w");
+      file.write((byte *)&ttt, sizeof(ttt));
+      file.close();
+  }
+
+  
 }  // moveTurnouts ()
-
-/*
-void moveTurnouts (int idSource, int idTarget) {
-  tData temp = ttt[idSource];
-  if (idSource > idTarget) {
-    for (int x=idSource; x>idTarget; x--) {
-      ttt[x]=ttt[x-1];
-    }
-  } else {
-    for (int x=idSource; x<idTarget; x++) {
-      ttt[x]=ttt[x+1];
-    }
-  }
-  ttt[idTarget] = temp;
-}*/
-
-/*
-void moveCabs (int idSource, int idTarget) {
-  cData temp = ccc[idSource];
-  if (idSource > idTarget) {
-    for (int x=idSource; x>idTarget; x--) {
-      ccc[x]=ccc[x-1];
-    }
-  } else {
-    for (int x=idSource; x<idTarget; x++) {
-      ccc[x]=ccc[x+1];
-    }
-  }
-  ccc[idTarget] = temp;
-}*/
 
 void moveCabs (int idSource, int idTarget) {
   int transferID = cOrder[idSource];
@@ -522,6 +637,14 @@ void moveCabs (int idSource, int idTarget) {
     }
   }
   cOrder[idTarget] = transferID;
+
+  char path[] = "/cOrder";
+  if (SPIFFS.exists(path)) {
+    File file = SPIFFS.open(path, "w");
+    file.write((byte *)cOrder, sizeof(cOrder));
+    file.close();
+  }
+  
 }  // moveCabs()
 
 
@@ -552,7 +675,7 @@ void loadOutputs() { // Accessories/Outputs
  //   Helper Functions   //
 //////////////////////////
 
-int invert(int value){
+int invert(int value) {
   if(value == 0)
     return 1;
   else
