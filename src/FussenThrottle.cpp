@@ -115,9 +115,13 @@ void setup(void){
   Serial.println('\n');
   // Serial.flush(); // From WiThrottle
   // Serial.setDebugOutput(true);
-
+  
   startWiFi();
   startFS();
+
+  retrieveSettings();
+  delay(10);
+
   startWebSocket();
   startMDNS();
   startServer();
@@ -125,7 +129,7 @@ void setup(void){
   loadOutputs();  // register outputs with Arduino
   // delay(1000);
   // Serial.println("<J 3>"); // play first sound after loadling switches
-  retrieveSettings();
+
 }
 
 //==============================================================
@@ -410,19 +414,30 @@ void turnoutAction(char *pch, int id, uint8_t num) {
 
 void retrieveSettings() {
   char path[4];
-  for (tData t: ttt) {
-    sprintf(path, "/T%d", t.id);
+  for (int id; id<totalOutputs; ++id) {
+    sprintf(path, "/T%d", id);
     if (SPIFFS.exists(path)) {
       File file = SPIFFS.open(path, "r");
+      tData t = ttt[id];
       file.read((byte *)&t, sizeof(t));
+      strcpy(ttt[id].icon0, t.icon0);
+      strcpy(ttt[id].icon1, t.icon1);
+      strcpy(ttt[id].type, t.type);
+      strcpy(ttt[id].pin, t.pin);
+      strcpy(ttt[id].show, t.show);
       file.close();
     }
   }
-  for (cData c: ccc) {
-    sprintf(path, "/C%d", c.id);
+
+  for (int id; id<totalLocos; ++id) {
+    sprintf(path, "/C%d", id);
     if (SPIFFS.exists(path)) {
       File file = SPIFFS.open(path, "r");
+      cData c = ccc[id];
       file.read((byte *)&c, sizeof(c));
+      strcpy(ccc[id].icon0, c.icon0);
+      strcpy(ccc[id].pin, c.pin);
+      strcpy(ccc[id].show, c.show);
       file.close();
     }
   }
@@ -430,42 +445,21 @@ void retrieveSettings() {
   char tPath[] = "/tOrder";
   if (SPIFFS.exists(tPath)) {
     File file = SPIFFS.open(tPath, "r");
-    file.read((byte *)tOrder, sizeof(tOrder));
+    file.read((byte *)&tOrder, sizeof(tOrder));
     file.close();
   }
 
   char cPath[] = "/cOrder";
   if (SPIFFS.exists(cPath)) {
     File file = SPIFFS.open(cPath, "r");
-    file.read((byte *)cOrder, sizeof(cOrder));
+    file.read((byte *)&cOrder, sizeof(cOrder));
     file.close();
   }
-
-  /*
-  while(f.available() && xCnt < 100) {
-        //Lets read line by line from the file
-        String line = f.readStringUntil('\n');
-        datArray[xCnt] = line.toInt();
-        Serial.print(xCnt);
-        Serial.print("  ");
-        Serial.println(line);
-        xCnt ++;
-      }
-
-    File f = SPIFFS.open("/data.txt", "w");
-
-    for (int i = 0; i < 100; i++) {
-      f.println(datArray[i]);
-    }
-    f.close();
-    */
-
-}  // retrieveSettings
+}
 
 void sendSetUpData(uint8_t num, char *pch, char *source) {  // for settings page
   char callCode = pch[0];
   char type = source[0];
-  // char *pID = strtok(source, "TC");
   char *pID;
   pID = source + 1;
   int dID;
@@ -546,7 +540,6 @@ void saveTitle(char *pch) {  // from settings page, modal edit
   sscanf(cID, "%d", &dID);
 
   char title[16];
-  // title = pch+6;
   strncpy(title, pch+6, 15);
   title[15] = '\0';
 
@@ -570,18 +563,10 @@ void saveTitle(char *pch) {  // from settings page, modal edit
 
     char path[] = "/tOrder";
     sprintf(path, "/C%d", c.id);
-    // if (SPIFFS.exists(path)) {
       File file = SPIFFS.open(path, "w");
       file.write((byte *)&c, sizeof(c));
       file.close();
-    // }
-    
   }
-
-
-
-
-
 }  // saveTitle()
 
 void moveItem(char *source, char *target) { //  Move cab or turnout location in table
@@ -614,15 +599,10 @@ void moveTurnouts (int idSource, int idTarget) {
     }
   }
   tOrder[idTarget] = transferID;
-
   char path[] = "/tOrder";
-  if (SPIFFS.exists(path)) {
-      File file = SPIFFS.open(path, "w");
-      file.write((byte *)&ttt, sizeof(ttt));
-      file.close();
-  }
-
-  
+  File file = SPIFFS.open(path, "w");
+  file.write((byte *)&tOrder, sizeof(tOrder));
+  file.close();
 }  // moveTurnouts ()
 
 void moveCabs (int idSource, int idTarget) {
@@ -637,14 +617,10 @@ void moveCabs (int idSource, int idTarget) {
     }
   }
   cOrder[idTarget] = transferID;
-
   char path[] = "/cOrder";
-  if (SPIFFS.exists(path)) {
-    File file = SPIFFS.open(path, "w");
-    file.write((byte *)cOrder, sizeof(cOrder));
-    file.close();
-  }
-  
+  File file = SPIFFS.open(path, "w");
+  file.write((byte *)&cOrder, sizeof(cOrder));
+  file.close();
 }  // moveCabs()
 
 

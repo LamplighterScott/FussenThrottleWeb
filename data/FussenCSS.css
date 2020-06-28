@@ -77,11 +77,9 @@ h2 {
 	padding-bottom: 2px;
 	padding-left: 2px;
 	padding-right: 2px;
-
-
-    cursor: pointer; /* Pointer/hand icon */
-    float: left; /* Float the buttons side by side */
-    font-size: 12px;
+  cursor: pointer; /* Pointer/hand icon */
+  float: left; /* Float the buttons side by side */
+  font-size: 12px;
 }
 
 /* Clear floats (clearfix hack) */
@@ -94,7 +92,6 @@ h2 {
 .btn-group button:not(:last-child) {
   border-right: none; /* Prevent double borders */
 }
-
 
 .buttonEnabled {
 	color: #D5CCFA;

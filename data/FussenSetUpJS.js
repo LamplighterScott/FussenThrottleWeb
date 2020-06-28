@@ -222,10 +222,10 @@ function saveEdit() {
 }
 
 window.onclick = function(event) {
-    if (event.target == modal) {
+    if (event.target.id == "modal") {
         modal.style.display = "none";
-    }
-    if (!event.target.matches('.dropbtn')) {
+    /*} else if (!event.target.matches('.dropbtn')) {*/
+    } else if (event.target.matches('.dropdown')||!event.target.matches('.dropbtn')) {
         let dropdowns = document.getElementsByClassName("dropdown-content");
         let i;
         for (i = 0; i < dropdowns.length; i++) {
@@ -235,6 +235,10 @@ window.onclick = function(event) {
             }
         }
     }
+}
+
+function dismisModal() {
+    modal.style.display = "none";
 }
 
 
