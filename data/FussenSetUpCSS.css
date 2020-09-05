@@ -111,6 +111,14 @@ ul {
     cursor: pointer;
 }
 
+.typeGrp {
+    margin-left: 12px;
+}
+
+.inputFields {
+    margin-left: 12px;
+}
+
 .textInput {
     font-size: 18px;
 }
@@ -188,6 +196,7 @@ a {
     position: relative;
     display: inline-block;
     width: 100%;
+    margin-left: 12px;
     /* both this and dropbtn need to be 100%*/
 }
 

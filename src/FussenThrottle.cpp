@@ -29,26 +29,26 @@ typedef struct {
   char icon0[8];  // icons for state 0 (closed) and 1 (thrown)
   char icon1[8];
   int iFlag;  // See DCC++ Outlets for bits explanation, WiThrottle uses bits 3-6 to communicate output type to DCC++ in Load Outputs
-              // T=8, C=16, F=32, L=64
+              // T=8, D=16, S=32, L=64
   int zStatus;  // 0 = closed (straight, green, off, 0(DCC++)), 1 = thrown (round, diverge, red, on, 1(DCC++))
   int present;  // 0 = not present, 1 = present in DCC++
   char show[2]; // = 0 if not to be displayed in throttle control screen, 1 = show
 } tData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 tData ttt[]= {
-  {0, "022", "To outer", "T", "\U00002B06\U0000FE0F", "\U00002196\U0000FE0F", 8, 0, 0, "1"},
-  {1, "024", "To inner", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "1"},
-  {2, "026", "Yard 1", "T", "\U00002B06\U0000FE0F", "\U00002196\U0000FE0F", 8, 0, 0, "1"},
-  {3, "028", "Yard 1-1", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "1"},
-  {4, "030", "Outer to Cross", "T", "\U00002B06\U0000FE0F", "\U00002196\U0000FE0F", 8, 0, 0, "1"},
-  {5, "032", "Cross to Yard 2", "T", "\U0001F500", "\U0001F504", 8, 0, 0, "1"},
-  {6, "034", "Yard 2-2", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "1"},
-  {7, "036", "Sidetrack", "T", "\U00002B06\U0000FE0F", "\U00002197\U0000FE0F", 8, 0, 0, "0"},
-  {8, "038", "Decoupler 1A", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {9, "040", "Decoupler 1B", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {10, "042", "Decoupler 2A", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {11, "044", "Decoupler 2B", "C", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {12, "046", "Semaphore", "T", "\U0001F6A6", "\U0001F6A5", 8, 0, 0, "0"},
+  {0, "022", "1 To outer", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {1, "024", "2 To inner", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {2, "026", "3 Yard 1", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {3, "028", "4 Yard 1-1", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {4, "030", "5 Outer to Yard", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {5, "032", "6 Cross to Yard", "T", "\U0001F504", "\U0001F500", 8, 0, 0, "1"},
+  {6, "034", "7 Yard 2-2", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {7, "036", "8 Sidetrack", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
+  {8, "038", "A Decoupler 1A", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
+  {9, "040", "B Decoupler 1B", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
+  {10, "042", "C Decoupler 2A", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
+  {11, "044", "D Decoupler 2B", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
+  {12, "046", "Semaphore", "S", "\U0001F6A5", "\U0001F6A6", 32, 0, 0, "0"},
   {13, "048", "Castle", "L", "\U0001F3F0", "\U0001F3F0", 64, 0, 0, "0"},
   {14, "048", "Signal Tressle", "L", "\U0001F3F0", "\U0001F3F0", 64, 0, 0, "0"}
 };
@@ -82,25 +82,31 @@ int LocoState[10][7]={{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0,0,0},{0,0,0,0,0
 int locoNumber = 0;  // global variable for current target loco number
 char printTxt[40];  // buffer for creating communication cstrings
 
+const int maxCommandLength = 30;
+char commandString[30+1];
+char c;
+int outputToLoad=0;
+
 void startWiFi();
 void startFS();
 void startWebSocket();
 void startMDNS();
 void startServer();
+void handleSerialCommand();
 void handleRoot();
 void handleSetup();
 bool handleFileRead(String path);
 void handle_CaptivePortal();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
 void powerOff(uint8_t num);
-void turnoutAction(char *pch, int id, uint8_t num);
+void outputAction(char *pch, int id, uint8_t num);
 void sendSetUpData(uint8_t num, char *pch, char *source);
 void saveItemData(char *pch);
 void saveTitle(char *pch);
 void moveItem(char *source, char *target);
 void moveTurnouts (int idSource, int idTarget);
 void moveCabs (int idSource, int idTarget);
-void loadOutputs();
+void loadOutputs(bool startLoading);
 void retrieveSettings();
 int invert(int value);
 String getContentType(String filename);
@@ -113,7 +119,7 @@ void setup(void){
   Serial.begin(115200);
   delay(10);
   Serial.println('\n');
-  // Serial.flush(); // From WiThrottle
+  Serial.flush();
   // Serial.setDebugOutput(true);
   
   startWiFi();
@@ -126,7 +132,7 @@ void setup(void){
   startMDNS();
   startServer();
 
-  loadOutputs();  // register outputs with Arduino
+  // loadOutputs();  // register outputs with Arduino
   // delay(1000);
   // Serial.println("<J 3>"); // play first sound after loadling switches
 
@@ -139,8 +145,9 @@ void loop(void){
   dnsServer.processNextRequest();
   webSocket.loop();
   server.handleClient();          //Handle client requests
+  handleSerialCommand();
+  
 }
-
 
 void startWiFi() {
   WiFi.mode(WIFI_AP);
@@ -197,7 +204,7 @@ void startServer() {
 
   //Start server
   server.begin();
-  Serial.println("HTTP server started");
+  // Serial.println("HTTP server started");
 
 }
 
@@ -216,7 +223,6 @@ void handleSetup() {
   handleFileRead(path);
 }
 
-
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
     // Serial.println("handleFileRead: " + path);
     if (path.endsWith("/")) path += "index.html";         // If a folder is requested, send the index file
@@ -231,7 +237,6 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
     return false;                                         // If the file doesn't exist, return false
 }
 
-
 void handle_CaptivePortal() {
   // String toSend = captivePortalRespone;
   // const char *toSend = captivePortalRespone;
@@ -239,6 +244,42 @@ void handle_CaptivePortal() {
   server.send(200, "text/html", captivePortalRespone);
   delay(100);
 }
+
+//===============================================================
+//   Serial Handlers
+//===============================================================
+
+void handleSerialCommand() {
+
+  while(Serial.available()>0)
+    {
+      c=Serial.read();
+      if(c=='<') {
+          // sprintf(commandString,"");
+          memset(commandString, 0, sizeof commandString);
+      } else if(c=='>') {
+      // if(c=='>') {
+
+        if (commandString[0] == 'C') {
+          loadOutputs(false);
+
+        } else if (commandString[0] == 'S') {
+          loadOutputs(true);
+        }
+      // } else if (c!='<') {
+      } else {
+        int commandStringLength = (unsigned)strlen(commandString);
+        if(commandStringLength < maxCommandLength) {
+          sprintf(commandString,"%s%c",commandString,c);
+        }
+      }
+    }
+}
+
+
+//===============================================================
+//   Websocket Handler
+//===============================================================
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) { // When a WebSocket message is received
   // num = client ID
@@ -337,9 +378,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         sscanf(cID,"%d", &id);
 
         if (type == 'A') {  // Action: Change status of Turnouts, Decouplers, Signals and Lights
-          turnoutAction(pch, id, num);
+          outputAction(pch, id, num);
 
-        } else if (type == 'J') { // hange status of sounds
+        } else if (type == 'J') { // change status of sounds
           // Sound instructions from control device: 0=stopLoop, 1=soundDN, 2=soundUP, sounds: 3 to x
           // Instructions in DFPlayer: -1=soundDN, 0=soundUP, sounds: 1 to x, Action 0=stop sound, execute by DF Player library function
           pch++;
@@ -352,8 +393,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
           int state = t.zStatus;
           char *icon = (state>0) ? t.icon1 : t.icon0;
           sprintf(printTxt, "<T %s %i %s %s %s>", pch, state, t.show, icon, t.title);
-          Serial.print(String(strlen(printTxt)));
-          Serial.println(printTxt);
+          // Serial.print(String(strlen(printTxt)));
+          // Serial.println(printTxt);
           webSocket.sendTXT(num, printTxt);
 
         } else if (type == 'C') {// request for cab data
@@ -386,19 +427,23 @@ void powerOff(uint8_t num) {
   webSocket.sendTXT(num, printTxt);
 }
 
-void turnoutAction(char *pch, int id, uint8_t num) {
+void outputAction(char *pch, int id, uint8_t num) {
   // Return specified output. id already re-ordered
   int i = tOrder[id];
   tData t = ttt[i];
   int state = t.zStatus;
-  char *icon;
-  if (state > 0) {
-    icon = t.icon0;
+  char *icon = t.icon0;
+  if (t.type[0] == 'D') {
     state = 0;
   } else {
-    icon = t.icon1;
-    state = 1;
+    state = (state>0) ? 0 : 1;
+    if (t.type[0] != 'L') {
+      if (state<1) {
+       icon = t.icon1;
+      }
+    }
   }
+  
   ttt[i].zStatus = state;
   sprintf(printTxt, "<Z %i %i>", i, state);
   Serial.println(printTxt);
@@ -406,7 +451,7 @@ void turnoutAction(char *pch, int id, uint8_t num) {
   sprintf(printTxt, "<Y T%s %i %s>", pch, state, icon);
   webSocket.sendTXT(num, printTxt);
 
-}  // turnoutAction
+}  // outputAction
 
   /////////////////////////
  // Settings Functions  //
@@ -414,7 +459,7 @@ void turnoutAction(char *pch, int id, uint8_t num) {
 
 void retrieveSettings() {
   char path[4];
-  for (int id; id<totalOutputs; ++id) {
+  for (int id = 0; id<totalOutputs; ++id) {
     sprintf(path, "/T%d", id);
     if (SPIFFS.exists(path)) {
       File file = SPIFFS.open(path, "r");
@@ -429,7 +474,7 @@ void retrieveSettings() {
     }
   }
 
-  for (int id; id<totalLocos; ++id) {
+  for (int id=0; id<totalLocos; ++id) {
     sprintf(path, "/C%d", id);
     if (SPIFFS.exists(path)) {
       File file = SPIFFS.open(path, "r");
@@ -464,37 +509,37 @@ void sendSetUpData(uint8_t num, char *pch, char *source) {  // for settings page
   pID = source + 1;
   int dID;
   sscanf(pID,"%d", &dID);
-  if (type == 'T') {
+  if (type == 'T') {  // Outputs
     int id = tOrder[dID];
     tData t = ttt[id];
-    if (t.type[0] == 'T') {
-      if (callCode == 'M') {
+    if (t.type[0] == 'T' || t.type[0] == 'S') {
+      if (callCode == 'M') {    // Called by FussenSetUpJS
         sprintf(printTxt, "<K %s %s %s%s %s>", t.show, t.pin, t.icon0, t.icon1, t.type);
         webSocket.sendTXT(num, printTxt);
         sprintf(printTxt, "<L %s>", t.title);
-      } else {
+      } else {  // Called by FussenJS
         sprintf(printTxt, "<I %s %s %s %s%s %s>", source, t.show, t.pin, t.icon0, t.icon1, t.title);
       }
     } else {
-        if (callCode == 'M') {
+        if (callCode == 'M') {  // Called by FussenSetUpJS
           sprintf(printTxt, "<K %s %s %s %s>", t.show, t.pin, t.icon0, t.type);
           webSocket.sendTXT(num, printTxt);
           sprintf(printTxt, "<L %s>", t.title);
-        } else {
+        } else {  // Called by FussenJS
           sprintf(printTxt, "<I %s %s %s %s %s>", source, t.show, t.pin, t.icon0, t.title);
         }
     }
     webSocket.sendTXT(num, printTxt);
 
-  } else if (type == 'C') {
+  } else if (type == 'C') { // Cabs
     int id = cOrder[dID];
     cData c = ccc[id];
       if (callCode == 'M') {
         sprintf(printTxt, "<K %s %s %s>", c.show, c.pin, c.icon0);
         webSocket.sendTXT(num, printTxt);
-        sprintf(printTxt, "<L %s>", c.title);
+        sprintf(printTxt, "<L %s>", c.title);  // Called by FussenSetUpJS
       } else {
-        sprintf(printTxt, "<I %s %s %s %s %s>", source, c.show, c.pin, c.icon0, c.title);
+        sprintf(printTxt, "<I %s %s %s %s %s>", source, c.show, c.pin, c.icon0, c.title);  // Called by FussenJS
       }
       webSocket.sendTXT(num, printTxt);
 
@@ -508,25 +553,59 @@ void saveItemData(char *pch) {  // from settings page, modal edit
   char tType[2];
   char pin[4];
   char show[2];
-  if (sscanf(pch+2, "%s %s %s %s %s %s", source, show, tType, pin, icon0, icon1) > 4) {
+  if (sscanf(pch+2, "%s %s %s %s %s %s", source, show, tType, pin, icon0, icon1) > 4) {  // Outputs
     const char type = source[0];
     char *cID;
     cID = source+1;
     int dID;
     sscanf(cID, "%d", &dID);
-    if (type == 'T') {
-      int id = tOrder[dID];
-      strcpy(ttt[id].icon0, icon0);
-      strcpy(ttt[id].icon1, icon1);
-      strcpy(ttt[id].type, tType);
-      strcpy(ttt[id].pin, pin);
-      strcpy(ttt[id].show, show);
-    } else if (type == 'C') {
+
+    if (type == 'C') { // Cabs, z=zero/zeht/no type
       int id = cOrder[dID];
       strcpy(ccc[id].icon0, icon0);
       strcpy(ccc[id].pin, pin);
       strcpy(ccc[id].show, show);
-    }
+
+    } else {  // Outputs T, D, S, L
+      int id = tOrder[dID];
+      tData t=ttt[id];
+      strcpy(ttt[id].icon0, icon0);
+      strcpy(ttt[id].icon1, icon1);
+      bool changeArduino = !(strcmp(t.type,tType) && strcmp(t.pin,pin) && strcmp(t.show,show));
+      if (changeArduino) {
+        sprintf(printTxt, "<Z %i>", t.id);  // Remove output
+        Serial.println(printTxt);
+        delay(50);
+        strcpy(ttt[id].type, tType);
+        strcpy(ttt[id].pin, pin);
+        strcpy(ttt[id].show, show);
+        int iFlag;
+        switch (tType[0]) {
+          case 'T': {  // Turnout
+            iFlag=8;
+            break;
+          }
+          case 'D': {  // Decoupler
+            iFlag=16;
+            break;
+          }
+          case 'S': {  // Semaphore
+            iFlag=32;
+            break;
+          }
+          case 'L': {  // Light
+            iFlag=64;
+            break;
+          }
+        }
+        ttt[id].iFlag = iFlag;
+        if (atoi(show) > 0) {  // Add output. if show
+          sprintf(printTxt, "<Z %i %s %i>", id, pin, iFlag);
+          Serial.println(printTxt);
+        }
+      }
+
+    } 
   }
 } // saveItemData()
 
@@ -545,8 +624,8 @@ void saveTitle(char *pch) {  // from settings page, modal edit
 
   if (type == 'T') {
     int id = tOrder[dID];
+    strcpy(ttt[id].title, title);
     tData t = ttt[id];
-    strcpy(t.title, title);
 
     char path[] = "/tOrder";
     sprintf(path, "/T%d", t.id);
@@ -558,8 +637,8 @@ void saveTitle(char *pch) {  // from settings page, modal edit
 
   } else if (type == 'C') {
     int id = cOrder[dID];
+    strcpy(ccc[id].title, title);
     cData c = ccc[id];
-    strcpy(c.title, title);
 
     char path[] = "/tOrder";
     sprintf(path, "/C%d", c.id);
@@ -624,28 +703,53 @@ void moveCabs (int idSource, int idTarget) {
 }  // moveCabs()
 
 
-  /////////////////////////
- ///   Init Functions   //
-/////////////////////////
+  //////////////////////////////////
+ ///   Load Outputs to Arduino   //
+//////////////////////////////////
 
-void loadOutputs() { // Accessories/Outputs
-  // Update Outputs to DCC++
-  int zStatus;
-  for (tData t: ttt)
-  {
-      // Serial.println("<Z "+String(t.id)+" "+t.pin+" "+String(t.iFlag)+">");
+void loadOutputs(bool startLoading) { // Accessories/Outputs
 
-      sprintf(printTxt, "<Z %i %s %i>", t.id, t.pin, t.iFlag);
-      Serial.println(printTxt);
-      zStatus = 0;
-      if (t.zStatus > 2)
-        zStatus = 1;
-      // Serial.print("<Z "+String(t.id)+" "+String(zStatus)+">");
-      sprintf(printTxt, "<Z %i %i>", t.id, zStatus);
-      Serial.print(printTxt);
+  if (startLoading) {
+    Serial.println("<e>");  // clear Arduino eeprom
+    outputToLoad = 0;
+  } else {
+    outputToLoad++;
   }
 
+  while (outputToLoad<totalOutputs) {
+    tData t = ttt[outputToLoad];
+    if (atoi(t.show) > 0) {
+      sprintf(printTxt, "<Z %i %s %i>", t.id, t.pin, t.iFlag);  // create output
+      Serial.println(printTxt);
+      break;
+    } else {
+      outputToLoad++;
+    }
+  }
+  
+  // Update Outputs to DCC++
+  
+  // delay(1000);
+  /* int waitCycles=0;
+   for (tData t: ttt)
+  {
+    if (atoi(t.show) > 0) {
+      sprintf(printTxt, "<Z %i %s %i>", t.id, t.pin, t.iFlag);
+      Serial.println(printTxt);
+      waitCycles = 0;
+      while(handleSerialCommand()<1) {
+        delay(20);
+        waitCycles++;
+        if (waitCycles>10) {
+          Serial.println("<H Loading Timeout>");
+          break;
+        }
+      }
+
+    }
+  }*/
 }  //  loadOutputs()
+
 
   //////////////////////////
  //   Helper Functions   //

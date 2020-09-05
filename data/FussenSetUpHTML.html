@@ -68,10 +68,10 @@
                 <div class="dropdown">
                     <button id="iconBtn" onClick="showIcons()" class="dropbtn">Icon</button>
                     <div id="iconDropS" class="dropdown-content">
-                        <a id="S00">⬆️↗️</a>
+                        <a id="S00">↗️⬆️</a>
                         <a id="S01">↖️⬆️</a>
-                        <a id="S02">🔀🔁</a>
-                        <a id="S03">🚦🚥</a>
+                        <a id="S02">🔁🔀</a>
+                        <a id="S03">🚥🚦</a>
                         <a id="S04">🧲</a>
                         <a id="S05">1️⃣2️⃣</a>
                         <a id="S06">⬆️⬇️</a>
@@ -109,29 +109,33 @@
                     </div>
                 </div>
                 <br><br>
-                <div id="typeGrp">
+                <div id="typeGrp" class="typeGrp">
                     <label >Behaviour</label><br>
                     <div class="switch-toggle">
                         <input id="T" type="radio" name="typeChoice" value="T" checked="" />
-                        <label for="T" onclick="">On-20ms-Off-Switch</label><br>
-                        <input id="C" type="radio" name="typeChoice" value="C checked="checked" />
-                        <label for="C" onclick="">On-20ms-Off</label><br>
+                        <label for="T" onclick="">On-20ms-Off-Switch Solenoid and LED</label><br>
+                        <input id="S" type="radio" name="typeChoice" value="S" checked="" />
+                        <label for="S" onclick="">On-20ms-Off-Switch Solenoid w/o LED</label><br>
+                        <input id="D" type="radio" name="typeChoice" value="D" checked="checked" />
+                        <label for="D" onclick="">On-20ms-Off Solenoid</label><br>
                         <input id="L" type="radio" name="typeChoice" value="L" checked=""" />
-                        <label for="L" onclick"">On/Off</label><br>
+                        <label for="L" onclick"">On/Off LED</label><br>
                     </div>
                     <br><br><br><br><br><br>
                 </div>
+                <div class="inputFields">
                 
-                <label id="tTitle" for="title">Name</label><br>
-                <input type="text" pattern="[^<>]{15}" id="title" name="title" size="16" default="indéterminé" class="textInput">
-                <br><label for="title" class="note">(15 characters max)</label><br><br>
+                    <label id="tTitle" for="title">Name</label><br>
+                    <input type="text" pattern="[^<>]{15}" id="title" name="title" size="16" default="indéterminé" class="textInput">
+                    <br><label for="title" class="note">(15 characters max)</label><br><br>
 
-                <label id="pinTitle" for="pin">Pin</label><br>
-                <input type="pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
-                <a class="btnR" onClick="saveEdit()">💾</a>
-                <br><label for="pin" class="note">(1-999)</label>
-            
-                <br><br>
+                    <label id="pinTitle" for="pin">Pin</label><br>
+                    <input type="pin" pattern="[0-9]{3}" default="000" id="pin" name="pin" size="4" default="000" class="textInput"></input>
+                    <a class="btnR" onClick="saveEdit()">💾</a>
+                    <br><label for="pin" class="note">(1-999)</label>
+
+                </div>
+                <br>
             </div>
         </div>
     </div>
