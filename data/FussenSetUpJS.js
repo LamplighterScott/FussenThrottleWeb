@@ -295,7 +295,7 @@ function onMessage(event) {
             } else {
                 el.innerHTML = "💤";
             }
-            document.getElementById("pin").value = com.substr(4,3);;
+            document.getElementById("pin").value = textArr[2];
             document.getElementById("iconBtn").innerHTML = textArr[3];
             if (textArr.length > 4) {  // Outputs
                 let type = textArr[4];

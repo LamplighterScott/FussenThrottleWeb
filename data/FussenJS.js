@@ -238,9 +238,9 @@ function onMessage(event) {
       let innerArray = Array.from(innerTxt);
       innerArray[0] = rIcon;
       element.innerHTML = innerArray.join("");
-      let textColor = "color:green";
+      let textColor = "color:red";
       if (state>0) {
-        textColor = "color:red";
+        textColor = "color:green";
       }
       element.style = textColor;
       break;
@@ -255,9 +255,9 @@ function onMessage(event) {
       const iconTitle = com.substr(10);
       const element = document.getElementById(rID);
       element.innerHTML = iconTitle;
-      let textColor = "color:green";
+      let textColor = "color:red";
       if (state>0) {
-        textColor = "color:red";
+        textColor = "color:green";
       }
       element.style = textColor;
       if (show>0) {

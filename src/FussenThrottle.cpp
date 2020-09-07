@@ -28,29 +28,27 @@ typedef struct {
   char type[2];  // T = turnout/semaphore, C = decoupler, L = Light
   char icon0[8];  // icons for state 0 (closed) and 1 (thrown)
   char icon1[8];
-  int iFlag;  // See DCC++ Outlets for bits explanation, WiThrottle uses bits 3-6 to communicate output type to DCC++ in Load Outputs
-              // T=8, D=16, S=32, L=64
-  int zStatus;  // 0 = closed (straight, green, off, 0(DCC++)), 1 = thrown (round, diverge, red, on, 1(DCC++))
-  int present;  // 0 = not present, 1 = present in DCC++
-  char show[2]; // = 0 if not to be displayed in throttle control screen, 1 = show
+  byte iFlag;  // See DCC++ Outlets for bits explanation, Fuseen Throttle uses bits 3-6 to communicate output type to DCC++ in Load Outputs
+              // bit0 not used in Fussen Throttle, bit1: 0=hide, 1=show; bit2: 0=disabled or rund, 1= enable or gerade
+              // bit no. (int value) T=3(8), D=4(16), S=5(32), L=6(64)
 } tData;
 /* Format {Switch number, pin number, name, type, X, X, X} */
 tData ttt[]= {
-  {0, "022", "1 To outer", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {1, "024", "2 To inner", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {2, "026", "3 Yard 1", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {3, "028", "4 Yard 1-1", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {4, "030", "5 Outer to Yard", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {5, "032", "6 Cross to Yard", "T", "\U0001F504", "\U0001F500", 8, 0, 0, "1"},
-  {6, "034", "7 Yard 2-2", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {7, "036", "8 Sidetrack", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 8, 0, 0, "1"},
-  {8, "038", "A Decoupler 1A", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {9, "040", "B Decoupler 1B", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {10, "042", "C Decoupler 2A", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {11, "044", "D Decoupler 2B", "D", "\U0001F9F2", "\U0001F9F2", 16, 0, 0, "0"},
-  {12, "046", "Semaphore", "S", "\U0001F6A5", "\U0001F6A6", 32, 0, 0, "0"},
-  {13, "048", "Castle", "L", "\U0001F3F0", "\U0001F3F0", 64, 0, 0, "0"},
-  {14, "048", "Signal Tressle", "L", "\U0001F3F0", "\U0001F3F0", 64, 0, 0, "0"}
+  {0, "022", "1 To outer", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {1, "024", "2 To inner", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {2, "026", "3 Yard 1", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {3, "028", "4 Yard 1-1", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {4, "030", "5 Outer to Yard", "T", "\U00002196\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {5, "032", "6 Cross to Yard", "T", "\U0001F504", "\U0001F500", 10},
+  {6, "034", "7 Yard 2-2", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {7, "036", "8 Sidetrack", "T", "\U00002197\U0000FE0F", "\U00002B06\U0000FE0F", 10},
+  {8, "038", "A Decoupler 1A", "D", "\U0001F9F2", "\U0001F9F2", 16},
+  {9, "040", "B Decoupler 1B", "D", "\U0001F9F2", "\U0001F9F2", 16},
+  {10, "042", "C Decoupler 2A", "D", "\U0001F9F2", "\U0001F9F2", 16},
+  {11, "044", "D Decoupler 2B", "D", "\U0001F9F2", "\U0001F9F2", 16},
+  {12, "046", "Semaphore", "S", "\U0001F6A5", "\U0001F6A6", 32},
+  {13, "048", "Castle", "L", "\U0001F3F0", "\U0001F3F0", 64},
+  {14, "048", "Signal Tressle", "L", "\U0001F3F0", "\U0001F3F0", 64}
 };
 const int totalOutputs = 15;  // Must include the zero row at the end
 
@@ -390,9 +388,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         } else if (type == 'T') { // request for turnout data. SendTurnoutDataToDevice(id)
           int i = tOrder[id];
           tData t = ttt[i];
-          int state = t.zStatus;
+          // int state = t.zStatus;
+          int state = bitRead(t.iFlag, 2);
           char *icon = (state>0) ? t.icon1 : t.icon0;
-          sprintf(printTxt, "<T %s %i %s %s %s>", pch, state, t.show, icon, t.title);
+          int show = bitRead(t.iFlag, 1);
+          sprintf(printTxt, "<T %s %i %i %s %s>", pch, state, show, icon, t.title);
           // Serial.print(String(strlen(printTxt)));
           // Serial.println(printTxt);
           webSocket.sendTXT(num, printTxt);
@@ -431,20 +431,33 @@ void outputAction(char *pch, int id, uint8_t num) {
   // Return specified output. id already re-ordered
   int i = tOrder[id];
   tData t = ttt[i];
-  int state = t.zStatus;
+  // int state = t.zStatus;
+  int state = bitRead(t.iFlag, 2);
   char *icon = t.icon0;
   if (t.type[0] == 'D') {
     state = 0;
   } else {
-    state = (state>0) ? 0 : 1;
+    state = (state>0) ? 0 : 1; // flip state for turnouts and signals
     if (t.type[0] != 'L') {
-      if (state<1) {
+      if (state>0) {
        icon = t.icon1;
       }
     }
   }
-  
-  ttt[i].zStatus = state;
+
+  // update ttt
+  bitWrite(ttt[i].iFlag, 2, state);
+  bitWrite(t.iFlag, 2, state);
+
+  // save to EEPROM
+  char path[4];
+  sprintf(path, "/T%d", t.id);
+  // if (SPIFFS.exists(path)) {
+    File file = SPIFFS.open(path, "w");
+    file.write((byte *)&t, sizeof(t));
+    file.close();
+ //}
+
   sprintf(printTxt, "<Z %i %i>", i, state);
   Serial.println(printTxt);
   pch++;
@@ -469,7 +482,9 @@ void retrieveSettings() {
       strcpy(ttt[id].icon1, t.icon1);
       strcpy(ttt[id].type, t.type);
       strcpy(ttt[id].pin, t.pin);
-      strcpy(ttt[id].show, t.show);
+      // strcpy(ttt[id].show, t.show);
+      // ttt[id].zStatus, t.zStatus;
+      ttt[id].iFlag = t.iFlag;
       file.close();
     }
   }
@@ -512,21 +527,22 @@ void sendSetUpData(uint8_t num, char *pch, char *source) {  // for settings page
   if (type == 'T') {  // Outputs
     int id = tOrder[dID];
     tData t = ttt[id];
+    int show = bitRead(t.iFlag, 1);
     if (t.type[0] == 'T' || t.type[0] == 'S') {
       if (callCode == 'M') {    // Called by FussenSetUpJS
-        sprintf(printTxt, "<K %s %s %s%s %s>", t.show, t.pin, t.icon0, t.icon1, t.type);
+        sprintf(printTxt, "<K %i %s %s%s %s>", show, t.pin, t.icon0, t.icon1, t.type);
         webSocket.sendTXT(num, printTxt);
         sprintf(printTxt, "<L %s>", t.title);
       } else {  // Called by FussenJS
-        sprintf(printTxt, "<I %s %s %s %s%s %s>", source, t.show, t.pin, t.icon0, t.icon1, t.title);
+        sprintf(printTxt, "<I %s %i %s %s%s %s>", source, show, t.pin, t.icon0, t.icon1, t.title);
       }
     } else {
         if (callCode == 'M') {  // Called by FussenSetUpJS
-          sprintf(printTxt, "<K %s %s %s %s>", t.show, t.pin, t.icon0, t.type);
+          sprintf(printTxt, "<K %i %s %s %s>", show, t.pin, t.icon0, t.type);
           webSocket.sendTXT(num, printTxt);
           sprintf(printTxt, "<L %s>", t.title);
         } else {  // Called by FussenJS
-          sprintf(printTxt, "<I %s %s %s %s %s>", source, t.show, t.pin, t.icon0, t.title);
+          sprintf(printTxt, "<I %s %i %s %s %s>", source, show, t.pin, t.icon0, t.title);
         }
     }
     webSocket.sendTXT(num, printTxt);
@@ -559,7 +575,7 @@ void saveItemData(char *pch) {  // from settings page, modal edit
     cID = source+1;
     int dID;
     sscanf(cID, "%d", &dID);
-
+    
     if (type == 'C') { // Cabs, z=zero/zeht/no type
       int id = cOrder[dID];
       strcpy(ccc[id].icon0, icon0);
@@ -567,44 +583,51 @@ void saveItemData(char *pch) {  // from settings page, modal edit
       strcpy(ccc[id].show, show);
 
     } else {  // Outputs T, D, S, L
+      int iShow = atoi(show);
       int id = tOrder[dID];
       tData t=ttt[id];
       strcpy(ttt[id].icon0, icon0);
       strcpy(ttt[id].icon1, icon1);
-      bool changeArduino = !(strcmp(t.type,tType) && strcmp(t.pin,pin) && strcmp(t.show,show));
+      int tShow = bitRead(t.iFlag, 1);
+      bool changeArduino = !(strcmp(t.type,tType) && strcmp(t.pin,pin) && tShow==iShow);
       if (changeArduino) {
         sprintf(printTxt, "<Z %i>", t.id);  // Remove output
         Serial.println(printTxt);
         delay(50);
         strcpy(ttt[id].type, tType);
         strcpy(ttt[id].pin, pin);
-        strcpy(ttt[id].show, show);
-        int iFlag;
+        bitWrite(t.iFlag, 1, iShow);
+        // strcpy(ttt[id].show, show);
+        int bitToChange = 0;
         switch (tType[0]) {
           case 'T': {  // Turnout
-            iFlag=8;
+            bitToChange=3;
             break;
           }
           case 'D': {  // Decoupler
-            iFlag=16;
+            bitToChange=4;
             break;
           }
           case 'S': {  // Semaphore
-            iFlag=32;
+            bitToChange=5;
             break;
           }
           case 'L': {  // Light
-            iFlag=64;
+            bitToChange=6;
             break;
           }
         }
-        ttt[id].iFlag = iFlag;
-        if (atoi(show) > 0) {  // Add output. if show
-          sprintf(printTxt, "<Z %i %s %i>", id, pin, iFlag);
-          Serial.println(printTxt);
+        if (bitToChange>2 && bitToChange<7) {
+          byte mask = 131;  // bits 0(1),1(2), 7(128)
+          byte iFlag = t.iFlag & mask; // zero out type bits and status bit
+          bitWrite(iFlag, bitToChange, 1);  // change to new type
+          ttt[id].iFlag = iFlag;
+          if (iShow > 0) {  // Add output. if show
+            sprintf(printTxt, "<Z %i %s %i>", id, pin, iFlag);
+            Serial.println(printTxt);
+          }
         }
       }
-
     } 
   }
 } // saveItemData()
@@ -627,7 +650,7 @@ void saveTitle(char *pch) {  // from settings page, modal edit
     strcpy(ttt[id].title, title);
     tData t = ttt[id];
 
-    char path[] = "/tOrder";
+    char path[4];
     sprintf(path, "/T%d", t.id);
     //if (SPIFFS.exists(path)) {
       File file = SPIFFS.open(path, "w");
@@ -640,7 +663,7 @@ void saveTitle(char *pch) {  // from settings page, modal edit
     strcpy(ccc[id].title, title);
     cData c = ccc[id];
 
-    char path[] = "/tOrder";
+    char path[4];
     sprintf(path, "/C%d", c.id);
       File file = SPIFFS.open(path, "w");
       file.write((byte *)&c, sizeof(c));
@@ -718,7 +741,7 @@ void loadOutputs(bool startLoading) { // Accessories/Outputs
 
   while (outputToLoad<totalOutputs) {
     tData t = ttt[outputToLoad];
-    if (atoi(t.show) > 0) {
+    if (bitRead(t.iFlag,1) > 0) {
       sprintf(printTxt, "<Z %i %s %i>", t.id, t.pin, t.iFlag);  // create output
       Serial.println(printTxt);
       break;
