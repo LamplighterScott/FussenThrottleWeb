@@ -308,14 +308,19 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         webSocket.sendTXT(num, on);
 
       } else if (payloadCommand == 'C') {   // used for getting loco status when changing locos
-        // Send speed and direction for all throttles
+        // Send speed and direction to all throttles, no number means upload last save loco
         pch++;
         int lN;
         if (sscanf(pch,"%d", &lN)==1) {
           locoNumber = cOrder[lN];
+          const char *path = "/curLoco";
+          File file = SPIFFS.open(path, "w");
+          file.write((byte *)&locoNumber, sizeof(locoNumber));
+          file.close();
+        }
           sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
           webSocket.sendTXT(num, printTxt);
-        }
+          Serial.println(printTxt);
 
       }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
         int fKey;
@@ -452,11 +457,9 @@ void outputAction(char *pch, int id, uint8_t num) {
   // save to EEPROM
   char path[4];
   sprintf(path, "/T%d", t.id);
-  // if (SPIFFS.exists(path)) {
     File file = SPIFFS.open(path, "w");
     file.write((byte *)&t, sizeof(t));
     file.close();
- //}
 
   sprintf(printTxt, "<Z %i %i>", i, state);
   Serial.println(printTxt);
@@ -482,8 +485,6 @@ void retrieveSettings() {
       strcpy(ttt[id].icon1, t.icon1);
       strcpy(ttt[id].type, t.type);
       strcpy(ttt[id].pin, t.pin);
-      // strcpy(ttt[id].show, t.show);
-      // ttt[id].zStatus, t.zStatus;
       ttt[id].iFlag = t.iFlag;
       file.close();
     }
@@ -515,6 +516,14 @@ void retrieveSettings() {
     file.read((byte *)&cOrder, sizeof(cOrder));
     file.close();
   }
+
+  char clPath[] = "/curLoco";
+  if (SPIFFS.exists(clPath)) {
+    File file = SPIFFS.open(clPath, "r");
+    file.read((byte *)&locoNumber, sizeof(locoNumber));
+    file.close();
+  }
+
 }
 
 void sendSetUpData(uint8_t num, char *pch, char *source) {  // for settings page
@@ -652,11 +661,9 @@ void saveTitle(char *pch) {  // from settings page, modal edit
 
     char path[4];
     sprintf(path, "/T%d", t.id);
-    //if (SPIFFS.exists(path)) {
-      File file = SPIFFS.open(path, "w");
-      file.write((byte *)&t, sizeof(t));
-      file.close();
-    // }
+    File file = SPIFFS.open(path, "w");
+    file.write((byte *)&t, sizeof(t));
+    file.close();
 
   } else if (type == 'C') {
     int id = cOrder[dID];
@@ -665,9 +672,9 @@ void saveTitle(char *pch) {  // from settings page, modal edit
 
     char path[4];
     sprintf(path, "/C%d", c.id);
-      File file = SPIFFS.open(path, "w");
-      file.write((byte *)&c, sizeof(c));
-      file.close();
+    File file = SPIFFS.open(path, "w");
+    file.write((byte *)&c, sizeof(c));
+    file.close();
   }
 }  // saveTitle()
 

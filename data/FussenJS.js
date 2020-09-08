@@ -1,4 +1,4 @@
-var curLoco = "None";
+var curLoco = "C00";
 var power = 0;
 var speed = 0;
 var direction = 1; // forward
@@ -41,6 +41,15 @@ function initElements() {
         setZ(item.id);
       });
     });
+
+    var w = window.innerHeight-210;
+    sendText = w.toString() + "px";
+    for (let e of document.querySelectorAll ("ul")) {
+      e.style.height=sendText;
+    }
+
+    connection.send("<C>");
+    document.getElementById("locoHeader").innerHTML = document.getElementById(curLoco).innerHTML;
   }, 200);
 }
 
@@ -51,15 +60,10 @@ function getInner(item) {
 }
 
 function selectLoco(fID) {
-  if (curLoco == fID) {
-    document.getElementById("locoHeader").innerHTML = "Select Loco";
-    curLoco = "None";
-  } else {
-    document.getElementById("locoHeader").innerHTML = document.getElementById(fID).innerHTML;
-    curLoco = fID;
-    sendText = "<" + curLoco + ">";
-    connection.send(sendText);
-  }
+  document.getElementById("locoHeader").innerHTML = document.getElementById(fID).innerHTML;
+  curLoco = fID;
+  sendText = "<" + curLoco + ">";
+  connection.send(sendText);
 }
 
 function showLocos() {
@@ -81,16 +85,12 @@ window.onclick = function(event) {
 }
 
 function setZ(tID) {
-  if (power>0) {
+  
     writeToScreen(tID);
     const com = tID[0];
     if (com == "F" ) {
-      if (curLoco != "None") {
         sendText = "<" + tID + ">";
         connection.send(sendText);
-      } else {
-        sendText = "--No loco selected!";
-      }
     } else if (com == "T") {
       var id = tID.substr(1);
       sendText = "<Z " + "A" + id + ">";
@@ -99,9 +99,7 @@ function setZ(tID) {
       sendText = "<Z " + tID + ">";
       connection.send(sendText);
     }
-  } else {
-    sendText = "Power is off";
-  }
+  
   writeToScreen(sendText);
 }
 
@@ -172,12 +170,11 @@ function sendSpeed(param) {
   } else {
     speed = 0;
   }
-  if (curLoco != "None") {
-    const directionTxt = direction.toString();
-    const speedTxt = speed.toString();
-    sendText = "<t " + curLoco + " " + speedTxt + " " + directionTxt + ">";
-    connection.send(sendText);
-  }
+  const directionTxt = direction.toString();
+  const speedTxt = speed.toString();
+  sendText = "<t " + curLoco + " " + speedTxt + " " + directionTxt + ">";
+  connection.send(sendText);
+  
 }
 
 function writeToScreen(message) {
@@ -209,22 +206,25 @@ function onMessage(event) {
     }
     case "t": {
       const tArray = com.split(" ");
-      const rCabTxt = tArray[1];
-      if (rCabTxt == curLoco) {
-        const rSpeedTxt = tArray[2];
-        const rDirectionTxt = tArray[3];
-        speed = Number(rSpeedTxt);
-        direction = Number(rDirectionTxt);
-        if (speed<0) {
-          speed = 0;
-        } else {
-          if (direction<1) {
-            speed = -speed;
-          }
-        }
-        const slider = document.getElementById("speedSlider");
-        slider.value = speed;
+      var upLoco = `C0${tArray[1]}`;
+      writeToScreen(upLoco);
+      if (upLoco != curLoco) {
+        curLoco=upLoco;
+        document.getElementById("locoHeader").innerHTML = document.getElementById(curLoco).innerHTML;
       }
+      const rSpeedTxt = tArray[2];
+      const rDirectionTxt = tArray[3];
+      speed = Number(rSpeedTxt);
+      direction = Number(rDirectionTxt);
+      if (speed<0) {
+        speed = 0;
+      } else {
+        if (direction<1) {
+          speed = -speed;
+        }
+      }
+      const slider = document.getElementById("speedSlider");
+      slider.value = speed;
       break;
     }
     case "Y": {
