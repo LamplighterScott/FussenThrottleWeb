@@ -49,7 +49,6 @@ function initElements() {
     }
 
     connection.send("<C>");
-    document.getElementById("locoHeader").innerHTML = document.getElementById(curLoco).innerHTML;
   }, 200);
 }
 
@@ -86,7 +85,6 @@ window.onclick = function(event) {
 
 function setZ(tID) {
   
-    writeToScreen(tID);
     const com = tID[0];
     if (com == "F" ) {
         sendText = "<" + tID + ">";
@@ -99,8 +97,7 @@ function setZ(tID) {
       sendText = "<Z " + tID + ">";
       connection.send(sendText);
     }
-  
-  writeToScreen(sendText);
+
 }
 
 function sendPower() {
@@ -206,8 +203,7 @@ function onMessage(event) {
     }
     case "t": {
       const tArray = com.split(" ");
-      var upLoco = `C0${tArray[1]}`;
-      writeToScreen(upLoco);
+      var upLoco = tArray[1];
       if (upLoco != curLoco) {
         curLoco=upLoco;
         document.getElementById("locoHeader").innerHTML = document.getElementById(curLoco).innerHTML;

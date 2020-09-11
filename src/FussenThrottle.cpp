@@ -311,14 +311,14 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
         // Send speed and direction to all throttles, no number means upload last save loco
         pch++;
         int lN;
-        if (sscanf(pch,"%d", &lN)==1) {
+        if (sscanf(pch,"%d", &lN)==1) {  // Change loco number
           locoNumber = cOrder[lN];
           const char *path = "/curLoco";
           File file = SPIFFS.open(path, "w");
           file.write((byte *)&locoNumber, sizeof(locoNumber));
           file.close();
         }
-          sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
+          sprintf(printTxt, "<t C0%i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
           webSocket.sendTXT(num, printTxt);
           Serial.println(printTxt);
 
