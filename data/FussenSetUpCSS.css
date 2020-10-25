@@ -160,6 +160,15 @@ ul {
     padding-left: 10px;
 }
 
+.btnLP {
+    touch-action: manipulation;
+    float: left;
+    width: "50%";
+    font-size: 18px;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
 .btnR {
     touch-action: manipulation;
     float: right;
@@ -167,6 +176,37 @@ ul {
     font-size: 36px;
     padding-right: 18px;
     padding-bottom: 10px;
+}
+
+.prgT {
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.btnRval {
+    font-size: 18px;
+    margin: 0% 0% 0% 5%;
+}
+
+.btnRWR {
+    touch-action: manipulation;
+    font-size: 18px;
+    border: 2px solid red;
+    padding: 5px 10px 6px 10px;
+    margin: 0% 10% 0% 0%;
+}
+
+.btnRWG {
+    touch-action: manipulation;
+    font-size: 18px;
+    border: 2px solid green;
+    padding: 5px 10px 6px 10px;
+    margin: 0% 10% 0% 10%;
+}
+
+.prgR {
+    font-size: 18px;
+    text-align: center;
 }
 
 .close:hover,

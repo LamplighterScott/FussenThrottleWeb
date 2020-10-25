@@ -1,3 +1,4 @@
+var messageTxt;
 var sendTxt = "";
 var dropped;
 var max = 15;
@@ -25,17 +26,21 @@ function showCabs() {
 var tRows;
 var cRows;
 var modal;
+var modalP
 
 function initElements() {
     setTimeout(sendInit, 200);
     function sendInit() {
         modal = document.getElementById("myModal");
+        modalP = document.getElementById("myModalP");
         let tElement = document.getElementById("turnouts");
         tRows = tElement.querySelectorAll(".drag");
         let cElement = document.getElementById("cabs");
         cRows = cElement.querySelectorAll(".drag");
         tRows.forEach(addEventListeners);
         cRows.forEach(addEventListeners);
+        sendTxt = "<0>";
+        connection.send(sendTxt);
     }
 
     function addEventListeners(item) {
@@ -76,14 +81,21 @@ function editItem(tID) {
     let eTitle = document.getElementById("tTitle");
     let eType = document.getElementById("typeGrp");
     let eNumber = document.getElementById("pinTitle");
+    let ePinNote = document.getElementById("pinNote");
+    let eDecPrgBtn = document.getElementById("decPrgBtn");
 
     if (max > 10) {
         eType.removeAttribute("hidden");
-        eNumber.innerHTML = "MEGA Pin Number";
+        eNumber.innerText = "MEGA Pin Number";
+        eTitle.innerText = "Title";
+        ePinNote.innerText = "(022-053)";
+        eDecPrgBtn.setAttribute("hidden", "false");
     } else {
-        eTitle.innerHTML = "Loco Name"
         eType.setAttribute("hidden", "false");
-        eNumber.innerHTML = "DCC Encoded Cab Number"
+        eNumber.innerText = "DCC Encoded Cab Number";
+        eTitle.innerText = "Loco Name";
+        ePinNote.innerText = "(001-080)";
+        eDecPrgBtn.removeAttribute("hidden");
     }
 
     sendTxt = "<M " + DID + ">";
@@ -221,9 +233,35 @@ function saveEdit() {
     connection.send(sendTxt);
 }
 
+function decoderProgram() {
+    modalP.style.display = "block";
+    document.getElementById("p11").value = document.getElementById("pin").value;
+    sendTxt = "<1>";
+    connection.send(sendTxt);
+}
+
+function rw(RorW, cv) {
+    let callBack='0';
+    if (RorW == "W") {
+        callBack='1';
+        const id = `p${cv}${callBack}`;
+        const value = document.getElementById(id).value;
+        cv = cv + " " + value;
+    }
+    sendTxt = RorW + " " + cv + " " + callBack + " 87";
+    document.getElementById("Tx").innerText = sendTxt;
+    sendTxt = "<" + sendTxt + ">";
+    connection.send(sendTxt);
+}
+
+
 window.onclick = function(event) {
     if (event.target.id == "modal") {
         modal.style.display = "none";
+            
+    } else if (event.target.id == "modalP") {
+        modalP.style.display = "none";
+        
     /*} else if (!event.target.matches('.dropbtn')) {*/
     } else if (event.target.matches('.dropdown')||!event.target.matches('.dropbtn')) {
         let dropdowns = document.getElementsByClassName("dropdown-content");
@@ -239,6 +277,12 @@ window.onclick = function(event) {
 
 function dismisModal() {
     modal.style.display = "none";
+}
+
+function dismisModalP() {
+    modalP.style.display = "none";
+    sendTxt = "<0>";
+    connection.send(sendTxt);
 }
 
 
@@ -280,55 +324,77 @@ var connection = new WebSocket("ws://" + location.hostname + ":81/", ['arduino']
 let textArr;
 
 function onMessage(event) {
-    var messageTxt = event.data;
+    messageTxt = event.data;
     var last = messageTxt.lastIndexOf(">");
     var com = messageTxt.substr(1, last - 1);
     var com1 = com.substr(0, 1);
     
-    if (modal.style.display === "block") {
-        if (com1 == "K") {
-            textArr = com.split(" ");
-            let showL = Number(textArr[1]);
-            let el = document.getElementById("btnL");
-            if (showL > 0) {
-                el.innerHTML = "👁️";
-            } else {
-                el.innerHTML = "💤";
-            }
-            document.getElementById("pin").value = textArr[2];
-            document.getElementById("iconBtn").innerHTML = textArr[3];
-            if (textArr.length > 4) {  // Outputs
-                let type = textArr[4];
-                let typeEl = document.getElementById(type);
-                if (type == "T" || type == "S") {
-                    typeEl.disabled = false;
-                    document.getElementById("D").disabled = true;
-                    document.getElementById("L").disabled = true;
-                } else if (type == "S") {
-                    document.getElementById("T").disabled = true;
-                    document.getElementById("S").disabled = true;
+        if (modal.style.display === "block") {
+            if (com1 == "K") {
+                textArr = com.split(" ");
+                let showL = Number(textArr[1]);
+                let el = document.getElementById("btnL");
+                if (showL > 0) {
+                    el.innerHTML = "👁️";
+                } else {
+                    el.innerHTML = "💤";
                 }
-                typeEl.checked = true;
+                document.getElementById("pin").value = textArr[2];
+                document.getElementById("iconBtn").innerHTML = textArr[3];
+                if (textArr.length > 4) {  // Outputs
+                    let type = textArr[4];
+                    let typeEl = document.getElementById(type);
+                    if (type == "T" || type == "S") {
+                        typeEl.disabled = false;
+                        document.getElementById("D").disabled = true;
+                        document.getElementById("L").disabled = true;
+                    } else if (type == "S") {
+                        document.getElementById("T").disabled = true;
+                        document.getElementById("S").disabled = true;
+                    }
+                    typeEl.checked = true;
+                }
+    
+            } else if (com1== "r") {
+                document.getElementById("Rx").innerText = com;
+                textArr = com.split("|");
+                const callBack = textArr[0];
+                const cv = textArr[2].split(" ");
+                const valueID = `p${cv[0]}${callBack}`;
+                let value = cv[1];
+                let WorR = '3';
+                let buttonColor = "green";
+                if (value == "-1") {
+                    buttonColor = "red";
+                    value = "--";
+                }
+                if (callBack == '0') {
+                    WorR = '2';
+                    document.getElementById(valueID).innerText = value;
+                }
+                const buttonID = `p${cv}${WorR}`;
+                document.getElementById(buttonID).style.backgroundColor = buttonColor;
+             
+            } else if (com1 == "L") {
+                document.getElementById("title").value = com.substr(2);
             }
-            
-        } else if (com1 == "L") {
-            document.getElementById("title").value = com.substr(2);
-        }
 
-    } else {
+        } else if (com1== "I") {
         
-        let tID = com.substr(2, 3);
-        let element = document.getElementById(tID);
-        let show = Number(com.substr(6, 1));
-        let pin = com.substr(8, 3);
-        if (show > 0) {
-            pin = "👁️  " + pin + "  ";
-        } else {
-            pin = "💤  " + pin + "  ";
+            let tID = com.substr(2, 3);
+            let element = document.getElementById(tID);
+            let show = Number(com.substr(6, 1));
+            let pin = com.substr(8, 3);
+            if (show > 0) {
+                pin = "👁️  " + pin + "  ";
+            } else {
+                pin = "💤  " + pin + "  ";
+            }
+            let innerText = pin + com.substr(12);
+            element.innerText = innerText;
         }
-        let innerText = pin + com.substr(12);
-        element.innerHTML = innerText;
-    }
+    
+
 }
 
 connection.onopen = function() {
