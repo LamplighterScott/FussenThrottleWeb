@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "DCCpp_Mega_MZ",
+			"path": "../../BaseStation-master/DCCpp_Mega_MZ"
+		}
+	],
+	"settings": {}
+}

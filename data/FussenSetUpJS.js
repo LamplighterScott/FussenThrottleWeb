@@ -280,9 +280,9 @@ function dismisModal() {
 }
 
 function dismisModalP() {
-    modalP.style.display = "none";
     sendTxt = "<0>";
     connection.send(sendTxt);
+    modalP.style.display = "none";
 }
 
 

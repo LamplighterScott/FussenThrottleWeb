@@ -101,8 +101,7 @@ function setZ(tID) {
 }
 
 function sendPower() {
-  power = Math.abs(power-1);
-  sendText = (power>0) ? "<1>" : "<0>";
+  sendText = (power>0) ? "<0>" : "<1>";
   connection.send(sendText);
 }
 
@@ -204,10 +203,8 @@ function onMessage(event) {
     case "t": {
       const tArray = com.split(" ");
       var upLoco = tArray[1];
-      if (upLoco != curLoco) {
-        curLoco=upLoco;
-        document.getElementById("locoHeader").innerHTML = document.getElementById(curLoco).innerHTML;
-      }
+      curLoco=upLoco;
+      document.getElementById("locoHeader").innerText = document.getElementById(curLoco).innerText;
       const rSpeedTxt = tArray[2];
       const rDirectionTxt = tArray[3];
       speed = Number(rSpeedTxt);

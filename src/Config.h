@@ -1,6 +1,6 @@
 /*
  * Config.h
- * Copyright (c) 2019, FussenRR by Scott Eaton
+ * Copyright (c) 2024, FussenRR by Scott Eaton
  * For ESP8266 connected to Arduino
 */
 

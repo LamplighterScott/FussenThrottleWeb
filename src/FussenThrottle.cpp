@@ -1,7 +1,7 @@
 /*
  * Arduino ESP8266 DCC++ over WiFi Throttle
  * Fussen RR
- * Version 1.0.0  April 11, 2020
+ * Version 1.1.0  December 20, 2024
  * By Scott Eaton
  */
 
@@ -85,6 +85,8 @@ char commandString[30+1];
 char c;
 int outputToLoad=0;
 uint8_t currentClient=0;
+const char *offText = "<0>";
+const char *onText = "<1>";
 
 void startWiFi();
 void startFS();
@@ -269,6 +271,19 @@ void handleSerialCommand() {
             }
             break;
           }
+          case 'p':{
+            switch (commandString[1]) {
+              case '0': {
+                webSocket.sendTXT(currentClient, offText);
+                break;
+              }
+
+              case '1': {
+                webSocket.sendTXT(currentClient, onText);
+                break;
+              }
+            }
+          }
         }
       // } else if (c!='<') {
       } else {
@@ -289,12 +304,14 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
   // num = client ID
   switch (type) {
     case WStype_DISCONNECTED: {
+      Serial.println("<J A5>"); //  DFPlayer plays alert, DCC++ returns nothing
       // Serial.printf("[%u] Disconnected!\n", num);
       break;
     }
     case WStype_CONNECTED: {
       // IPAddress ip = webSocket.remoteIP(num);
       webSocket.remoteIP(num);
+      Serial.println("<J A6>"); //  DFPlayer plays alert, DCC++ returns nothing
       // Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
       break;
     }
@@ -305,44 +322,45 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       //const char payloadCommand = (const char) payload[1];
       char payloadCommand = payload[1];
 
+      // sprintf(printTxt, "<H payloadCommand: %c, pch: %s", payloadCommand, pch);
+      // Serial.println(printTxt);
+
       if (payloadCommand == '0') {                    // Power off
-        powerOff(num);
+        Serial.println(offText);
+        // webSocket.sendTXT(num, offText);
 
       } else if (payloadCommand == '1') {             // Power on
-        const char *on = "<1>";
-        Serial.println(on);
-        webSocket.sendTXT(num, on);
+        Serial.println(onText);
+        //webSocket.sendTXT(num, onText);
 
       } else if (payloadCommand == 'C') {   // used for getting loco status when changing locos
         // Send speed and direction to all throttles, no number means upload last save loco
-        if (locoNumber < totalLocos) {
-            pch++;
-          int lN;
-          if (sscanf(pch,"%d", &lN)==1) {  // Change loco number
-            locoNumber = cOrder[lN];
-            const char *path = "/curLoco";
-            File file = LittleFS.open(path, "w");
-            file.write((byte *)&locoNumber, sizeof(locoNumber));
-            file.close();
-          }
-            sprintf(printTxt, "<t C0%i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
-            webSocket.sendTXT(num, printTxt);
-            Serial.println(printTxt);
+        if (locoNumber > totalLocos - 1) locoNumber = 0;
+        pch++;
+        int lN;
+        if (sscanf(pch,"%d", &lN)==1) {  // Change loco number
+          locoNumber = cOrder[lN];
+          const char *path = "/curLoco";
+          File file = LittleFS.open(path, "w");
+          file.write((byte *)&locoNumber, sizeof(locoNumber));
+          file.close();
         }
+        sprintf(printTxt, "<t C0%i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
+        webSocket.sendTXT(num, printTxt);
+        // DCC++ loco register starts at 1
+        sprintf(printTxt, "<t %i %i %i>", locoNumber+1, LocoState[locoNumber][5], LocoState[locoNumber][6]);
+        Serial.println(printTxt);
 
       }  else if (payloadCommand == 'F') {             // Loco functions <F ID Loco>
-        if (locoNumber < totalLocos) {
-            int fKey;
-          pch++;
-          if (sscanf(pch,"%d", &fKey)==1) {
-            LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
-            int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
-            if (locoNumber < totalLocos) {
-              //Serial.println("<f " + String(ccc[locoNumber].pin) + " " + String(keyFunc) + ">");  // DCC++ returns?
-              sprintf(printTxt, "<f %s %i>", ccc[locoNumber].pin, keyFunc);
-              Serial.println(printTxt);
-            }
-          }
+        if (locoNumber > totalLocos - 1) locoNumber = 0;
+        int fKey;
+        pch++;
+        if (sscanf(pch,"%d", &fKey)==1) {
+          LocoState[locoNumber][fKey] = invert(LocoState[locoNumber][fKey]);
+          int keyFunc = 128+LocoState[locoNumber][1]*1+LocoState[locoNumber][2]*2+LocoState[locoNumber][3]*4+LocoState[locoNumber][4]*8+LocoState[locoNumber][0]*16;
+          //Serial.println("<f " + String(ccc[locoNumber].pin) + " " + String(keyFunc) + ">");  // DCC++ returns?
+          sprintf(printTxt, "<f %s %i>", ccc[locoNumber].pin, keyFunc);
+          Serial.println(printTxt);
         }
 
       } else if (payloadCommand == 'I' || payloadCommand == 'M') {  // settings: set-up, move and edit
@@ -363,59 +381,65 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 
       } else if (payloadCommand == 't') {             // Direction: reverse(0), forward(1); Speed: eStop(<0), 0-126
         // Control device sends: <t REGISTER LOCO SPEED DIRECTION>; DCC++ returns <T REGISTER SPEED DIRECTION>, ignored!!
-        if (locoNumber < totalLocos) {
-          int locoSpeed;
-          int locoDirection;
-          char *pch2;
-          pch2 = pch + 6;
-          if (sscanf(pch2,"%d %d", &locoSpeed, &locoDirection) == 2) {
-              // Save new settings
-            // Serial.println("locoNumber:" + String(locoNumber));
-            LocoState[locoNumber][5]=locoSpeed;
-            LocoState[locoNumber][6]=locoDirection;
-            int locoID = locoNumber + 1;  // DCC++ loco register starts at 1
-            webSocket.sendTXT(num, printTxt);  // confirm new settings to throttle
-            sprintf(printTxt, "<t %i %s %i %i>", locoID, ccc[locoNumber].pin, locoSpeed, locoDirection);
-            Serial.println(printTxt);
-          }
+        if (locoNumber > totalLocos - 1) locoNumber = 0;
+        int locoSpeed;
+        int locoDirection;
+        char *pch2;
+        pch2 = pch + 6;
+        if (sscanf(pch2,"%d %d", &locoSpeed, &locoDirection) == 2) {
+            // Save new settings
+          // Serial.println("locoNumber:" + String(locoNumber));
+          LocoState[locoNumber][5]=locoSpeed;
+          LocoState[locoNumber][6]=locoDirection;
+          sprintf(printTxt, "<t C0%i %i %i>", locoNumber, locoSpeed, locoDirection);
+          webSocket.sendTXT(num, printTxt);  // confirm new settings to throttle
+          // DCC++ loco register starts at 1
+          sprintf(printTxt, "<t %i %s %i %i>", locoNumber+1, ccc[locoNumber].pin, locoSpeed, locoDirection);
+          Serial.println(printTxt);
         }
 
       } else if (payloadCommand == 'Z') { // Turnouts, decouplers and sounds <Z Type&ID>
 
         pch += 2;
         char type = pch[0];
-        char *cID;
-        cID = pch+1;
-        int id;
-        sscanf(cID,"%d", &id);
 
-        if (type == 'A') {  // Action: Change status of Turnouts, Decouplers, Signals and Lights
-          outputAction(pch, id, num);
-
-        } else if (type == 'J') { // change status of sounds
-          // Sound instructions from control device: 0=stopLoop, 1=soundDN, 2=soundUP, sounds: 3 to x
-          // Instructions in DFPlayer: -1=soundDN, 0=soundUP, sounds: 1 to x, Action 0=stop sound, execute by DF Player library function
-          pch++;
-          sprintf(printTxt, "<J %s>", pch);
+        if (type == 'J') { // Sound commands
+          // Souond commands: A=alert, C=command, P=Play once, L=Loop
+          // Sound command ids from control device: 0=stopLoop, 1=soundDN, 2=soundUP
+          sprintf(printTxt, "<J %s>", pch+1);  // i.e. <j C1>
           Serial.println(printTxt);
 
-        } else if (type == 'T') { // request for turnout data. SendTurnoutDataToDevice(id)
-          int i = tOrder[id];
-          tData t = ttt[i];
-          // int state = t.zStatus;
-          int state = bitRead(t.iFlag, 2);
-          char *icon = (state>0) ? t.icon1 : t.icon0;
-          int show = bitRead(t.iFlag, 1);
-          sprintf(printTxt, "<T %s %i %i %s %s>", pch, state, show, icon, t.title);
-          // Serial.print(String(strlen(printTxt)));
-          // Serial.println(printTxt);
-          webSocket.sendTXT(num, printTxt);
+        } else {
+          char *cID;
+          cID = pch+1;
+          int id;
+          sscanf(cID,"%d", &id);
 
-        } else if (type == 'C') {// request for cab data
-          int i = cOrder[id];
-          cData c = ccc[i];
-          sprintf(printTxt, "<C %s %s %s %s>", pch, c.show, c.icon0, c.title);
-          webSocket.sendTXT(num, printTxt);
+          // sprintf(printTxt, "<H type: %c, pch: %s, id: %i>", type, pch, id);
+          // Serial.println(printTxt);
+
+        
+          if (type == 'A') {  // Action: Change status of Turnouts, Decouplers, Signals and Lights
+            outputAction(pch, id, num);
+
+          } else if (type == 'T') { // request for turnout data. SendTurnoutDataToDevice(id)
+            int i = tOrder[id];
+            tData t = ttt[i];
+            // int state = t.zStatus;
+            int state = bitRead(t.iFlag, 2);
+            char *icon = (state>0) ? t.icon1 : t.icon0;
+            int show = bitRead(t.iFlag, 1);
+            sprintf(printTxt, "<T %s %i %i %s %s>", pch, state, show, icon, t.title); // <T 
+            // Serial.print(String(strlen(printTxt)));
+            // Serial.println(printTxt);
+            webSocket.sendTXT(num, printTxt);
+
+          } else if (type == 'C') {// request for cab data
+            int i = cOrder[id];
+            cData c = ccc[i];
+            sprintf(printTxt, "<C %s %s %s %s>", pch, c.show, c.icon0, c.title);
+            webSocket.sendTXT(num, printTxt);
+          }
         }
 
       } else if (payloadCommand == 'R' || payloadCommand == 'W') {
@@ -431,21 +455,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
   //////////////////////////
  //  Throttle functions  //
 //////////////////////////
-
-void powerOff(uint8_t num) {
-  const char *offText = "<0>";
-  webSocket.sendTXT(num, offText);
-  for (int x=0; x<totalLocos; x++) {
-    LocoState[x][5]=0;
-    LocoState[x][6]=0;
-  }
-  // sendText = "<t "+String(locoNumber)+" "+String(LocoState[locoNumber][5])+" "+String(LocoState[locoNumber][6])+">";  // Speed and direction to control device;
-  // webSocket.sendTXT(num, sendText);
-  if (locoNumber < totalLocos) {
-    sprintf(printTxt, "<t %i %i %i>", locoNumber, LocoState[locoNumber][5], LocoState[locoNumber][6]);
-  webSocket.sendTXT(num, printTxt);
-  }
-}
 
 void outputAction(char *pch, int id, uint8_t num) {
   // Return specified output. id already re-ordered

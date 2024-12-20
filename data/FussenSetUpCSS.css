@@ -179,8 +179,8 @@ ul {
 }
 
 .prgT {
-    margin-top: 20px;
-    margin-bottom: 15px;
+    margin-top: 14px;
+    margin-bottom: 8px;
 }
 
 .btnRval {
@@ -241,7 +241,7 @@ a {
 }
 
 .dropdown-content {
-    font-size: 12px;
+    font-size:24px;
     display: none;
     position: absolute;
     /* creates overlay */
