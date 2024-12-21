@@ -8,9 +8,9 @@
         {
             "name": "PlatformIO",
             "includePath": [
-                "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/include",
-                "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/src",
-                "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/WebSockets/src",
+                "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/include",
+                "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/src",
+                "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/WebSockets/src",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/Ethernet/src",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/SPI",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/Hash/src",
@@ -24,7 +24,7 @@
                 "/Users/scotteaton/.platformio/packages/toolchain-xtensa/include",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/tools/sdk/lwip2/include",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/variants/generic",
-                "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/ArduinoWebsockets/src",
+                "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/ArduinoWebsockets/src",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/ArduinoOTA",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/EEPROM",
                 "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266AVRISP/src",
@@ -59,9 +59,9 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
-                    "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/include",
-                    "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/src",
-                    "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/WebSockets/src",
+                    "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/include",
+                    "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/src",
+                    "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/WebSockets/src",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/Ethernet/src",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/SPI",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/Hash/src",
@@ -75,7 +75,7 @@
                     "/Users/scotteaton/.platformio/packages/toolchain-xtensa/include",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/tools/sdk/lwip2/include",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/variants/generic",
-                    "/Users/scotteaton/Documents/Trains/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/ArduinoWebsockets/src",
+                    "/Users/scotteaton/Documents/Trains/Sketches (Latest)/FussenWeb/FussenThrottleSafari/.pio/libdeps/esp01_1m/ArduinoWebsockets/src",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/ArduinoOTA",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/EEPROM",
                     "/Users/scotteaton/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266AVRISP/src",
